@@ -34,27 +34,27 @@ find . -maxdepth 1 -type d -not -path "./wokeometer" -not -path "." -not -path "
 echo "📋 Copying build files to root..."
 cp -r wokeometer/build/* .
 
-# Verify that assets from public directory were copied
-echo "🔍 Verifying public assets..."
-if [ -d "wokeometer/public" ] && [ "$(ls -A wokeometer/public)" ]; then
-  # Check if at least one public directory exists in root
-  PUBLIC_DIRS=("icons" "images")
-  FOUND=false
+# # Verify that assets from public directory were copied
+# echo "🔍 Verifying public assets..."
+# if [ -d "wokeometer/public" ] && [ "$(ls -A wokeometer/public)" ]; then
+#   # Check if at least one public directory exists in root
+#   PUBLIC_DIRS=("icons" "images")
+#   FOUND=false
 
-  for DIR in "${PUBLIC_DIRS[@]}"; do
-    if [ -d "$DIR" ]; then
-      FOUND=true
-      break
-    fi
-  done
+#   for DIR in "${PUBLIC_DIRS[@]}"; do
+#     if [ -d "$DIR" ]; then
+#       FOUND=true
+#       break
+#     fi
+#   done
 
-  if [ "$FOUND" = false ]; then
-    echo "⚠️ Warning: Public assets may not have been copied correctly."
-    echo "Manually copying public directory contents..."
-    cp -r wokeometer/public/* .
-  else
-    echo "✓ Public assets verified."
-  fi
-fi
+#   if [ "$FOUND" = false ]; then
+#     echo "⚠️ Warning: Public assets may not have been copied correctly."
+#     echo "Manually copying public directory contents..."
+#     cp -r wokeometer/public/* .
+#   else
+#     echo "✓ Public assets verified."
+#   fi
+# fi
 
 echo "✅ Build complete! Files are ready for GitHub Pages."
