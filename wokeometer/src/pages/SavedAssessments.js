@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadAssessments } from '../data';
+import { loadAssessments, deleteAssessment } from '../data';
+import Modal from '../components/Modal';
 
 const SavedAssessments = () => {
   const [assessments, setAssessments] = useState([]);
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    assessmentId: null,
+    showName: ''
+  });
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -22,6 +28,25 @@ const SavedAssessments = () => {
   
   const handleViewAssessment = (id) => {
     navigate(`/view/${id}`);
+  };
+
+  const handleDeleteClick = (e, id, showName) => {
+    e.stopPropagation(); // Prevent triggering the card's onClick
+    setDeleteModal({
+      isOpen: true,
+      assessmentId: id,
+      showName
+    });
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteAssessment(deleteModal.assessmentId);
+    setAssessments(loadAssessments()); // Reload assessments after deletion
+    setDeleteModal({ isOpen: false, assessmentId: null, showName: '' });
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, assessmentId: null, showName: '' });
   };
   
   const formatDate = (dateString) => {
@@ -53,9 +78,17 @@ const SavedAssessments = () => {
             >
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-lg font-bold">{assessment.showName}</h3>
-                <span className={`font-medium ${getCategoryClass(assessment.category)}`}>
-                  {assessment.score} ({assessment.category})
-                </span>
+                <div className="flex items-center gap-4">
+                  <span className={`font-medium ${getCategoryClass(assessment.category)}`}>
+                    {assessment.score} ({assessment.category})
+                  </span>
+                  <button
+                    onClick={(e) => handleDeleteClick(e, assessment.id, assessment.showName)}
+                    className="btn btn-danger btn-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
               <div className="text-sm text-dark-muted">
                 {formatDate(assessment.date)}
@@ -64,6 +97,14 @@ const SavedAssessments = () => {
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={deleteModal.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Assessment"
+        message={`Are you sure you want to delete the assessment for "${deleteModal.showName}"? This action cannot be undone.`}
+      />
     </div>
   );
 };

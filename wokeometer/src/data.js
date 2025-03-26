@@ -200,3 +200,10 @@ export const getAssessment = (id) => {
   const assessments = loadAssessments();
   return assessments.find(a => a.id === id) || null;
 };
+
+// Delete assessment by ID
+export const deleteAssessment = (id) => {
+  const savedAssessments = JSON.parse(localStorage.getItem('wokeometerAssessments') || '[]');
+  const updatedAssessments = savedAssessments.filter(a => a.id !== id);
+  localStorage.setItem('wokeometerAssessments', JSON.stringify(updatedAssessments));
+};

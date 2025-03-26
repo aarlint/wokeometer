@@ -188,22 +188,18 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center">
               <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">1</kbd>
-              <span>for "-- SELECT ONE --"</span>
-            </div>
-            <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">2</kbd>
               <span>for "N/A"</span>
             </div>
             <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">3</kbd>
+              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">2</kbd>
               <span>for "Disagree"</span>
             </div>
             <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">4</kbd>
+              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">3</kbd>
               <span>for "Agree"</span>
             </div>
             <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">5</kbd>
+              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">4</kbd>
               <span>for "Strongly Agree"</span>
             </div>
             <div className="flex items-center">
