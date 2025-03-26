@@ -207,3 +207,65 @@ export const deleteAssessment = (id) => {
   const updatedAssessments = savedAssessments.filter(a => a.id !== id);
   localStorage.setItem('wokeometerAssessments', JSON.stringify(updatedAssessments));
 };
+
+// Update an existing assessment
+export const updateAssessment = (id, showName, questions, score, category) => {
+  const savedAssessments = JSON.parse(localStorage.getItem('wokeometerAssessments') || '[]');
+  const assessmentIndex = savedAssessments.findIndex(a => a.id === id);
+  
+  if (assessmentIndex === -1) {
+    return null;
+  }
+  
+  const updatedAssessment = {
+    ...savedAssessments[assessmentIndex],
+    showName,
+    questions: [...questions],
+    score,
+    category,
+    date: new Date().toISOString()
+  };
+  
+  savedAssessments[assessmentIndex] = updatedAssessment;
+  localStorage.setItem('wokeometerAssessments', JSON.stringify(savedAssessments));
+  
+  return updatedAssessment;
+};
+
+// Export assessments to a JSON file
+export const exportAssessments = () => {
+  const assessments = loadAssessments();
+  const dataStr = JSON.stringify(assessments, null, 2);
+  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+  
+  const exportFileDefaultName = 'assessments.json';
+  
+  const linkElement = document.createElement('a');
+  linkElement.setAttribute('href', dataUri);
+  linkElement.setAttribute('download', exportFileDefaultName);
+  linkElement.click();
+};
+
+// Import assessments from a JSON file
+export const importAssessments = (jsonData) => {
+  try {
+    const assessments = JSON.parse(jsonData);
+    if (!Array.isArray(assessments)) {
+      throw new Error('Invalid format: expected an array of assessments');
+    }
+    
+    // Validate each assessment has required fields
+    assessments.forEach(assessment => {
+      if (!assessment.id || !assessment.showName || !assessment.questions || !assessment.score || !assessment.category) {
+        throw new Error('Invalid assessment format: missing required fields');
+      }
+    });
+    
+    // Save to localStorage
+    localStorage.setItem('wokeometerAssessments', JSON.stringify(assessments));
+    return true;
+  } catch (error) {
+    console.error('Error importing assessments:', error);
+    throw error;
+  }
+};

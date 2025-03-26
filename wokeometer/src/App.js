@@ -7,6 +7,7 @@ import AssessmentWizard from './pages/AssessmentWizard';
 import Results from './pages/Results';
 import SavedAssessments from './pages/SavedAssessments';
 import ViewAssessment from './pages/ViewAssessment';
+import EditAssessment from './pages/EditAssessment';
 
 function App() {
   const [currentAssessment, setCurrentAssessment] = useState(null);
@@ -46,6 +47,7 @@ function App() {
             />
             <Route path="/saved" element={<SavedAssessments />} />
             <Route path="/view/:id" element={<ViewAssessment />} />
+            <Route path="/edit/:id" element={<EditAssessment />} />
           </Routes>
         </div>
       </div>

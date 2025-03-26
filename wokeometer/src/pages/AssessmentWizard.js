@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ANSWER_OPTIONS, ANSWER_OPTIONS_LAYOUT } from '../data';
+import { ANSWER_OPTIONS, ANSWER_OPTIONS_LAYOUT, calculateScore, getWokenessCategory, saveAssessment } from '../data';
 
-const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
+const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish }) => {
   const [currentPage, setCurrentPage] = useState(currentAssessment.currentPage);
   const navigate = useNavigate();
   
@@ -82,8 +82,23 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     } else {
-      // If we're on the last page, go to results
-      navigate('/results');
+      // If we're on the last page, calculate results and save
+      const score = calculateScore(currentAssessment.questions);
+      const category = getWokenessCategory(score);
+      
+      if (onFinish) {
+        // If we have an onFinish handler, use it (for editing)
+        onFinish();
+      } else {
+        // Otherwise save as new assessment
+        saveAssessment(
+          currentAssessment.showName,
+          currentAssessment.questions,
+          score,
+          category
+        );
+        navigate('/results');
+      }
     }
   };
   
@@ -106,19 +121,21 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
   return (
     <div className="max-w-3xl mx-auto">
       <h2 className="text-3xl font-bold text-center mb-8">
-        Assessing: <span className="text-primary">{currentAssessment.showName}</span>
+        {onFinish ? 'Editing' : 'Assessing'}: <span className="text-primary">{currentAssessment.showName}</span>
         {currentAssessment.showType && ` (${currentAssessment.showType})`}
       </h2>
       
       <div className="card">
-        <div className="mb-6 flex justify-between items-center">
-          <h3 className="text-lg font-semibold">
-            Page {currentPage} of {totalPages}
-          </h3>
-          <div className="text-sm text-dark-muted">
-            Showing questions {startIndex + 1} - {endIndex} of {currentAssessment.questions.length}
+        {totalPages > 1 && (
+          <div className="mb-6 flex justify-between items-center">
+            <h3 className="text-lg font-semibold">
+              Page {currentPage} of {totalPages}
+            </h3>
+            <div className="text-sm text-dark-muted">
+              Showing questions {startIndex + 1} - {endIndex} of {currentAssessment.questions.length}
+            </div>
           </div>
-        </div>
+        )}
         
         {currentQuestions.map((question) => (
           <div key={question.id} className="question">
@@ -146,40 +163,52 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
           </div>
         ))}
         
-        <div className="flex justify-between items-center mt-8">
-          <button 
-            onClick={handlePrevious} 
-            className="btn btn-secondary" 
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-          
-          <div>
-            {currentPage < totalPages ? (
-              <button 
-                onClick={handleNext} 
-                className="btn btn-primary" 
-                disabled={!canProceed()}
-              >
-                Next
-              </button>
-            ) : (
-              <button 
-                onClick={handleNext} 
-                className="btn btn-primary" 
-                disabled={!canProceed()}
-              >
-                Finish
-              </button>
-            )}
+        {totalPages > 1 ? (
+          <div className="flex justify-between items-center mt-8">
+            <button 
+              onClick={handlePrevious} 
+              className="btn btn-secondary" 
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            
+            <div>
+              {currentPage < totalPages ? (
+                <button 
+                  onClick={handleNext} 
+                  className="btn btn-primary" 
+                  disabled={!canProceed()}
+                >
+                  Next
+                </button>
+              ) : (
+                <button 
+                  onClick={handleNext} 
+                  className="btn btn-primary" 
+                  disabled={!canProceed()}
+                >
+                  {onFinish ? 'Save Changes' : 'Finish'}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex justify-end mt-8">
+            <button 
+              onClick={handleNext} 
+              className="btn btn-primary" 
+              disabled={!canProceed()}
+            >
+              {onFinish ? 'Save Changes' : 'Finish'}
+            </button>
+          </div>
+        )}
       </div>
       
       <div className="mt-6 card">
         <p className="text-dark-muted mb-4">
-          Please answer all questions on this page before proceeding.
+          Please answer all questions before proceeding.
           Select "N/A" for any questions that don't apply to the content you're assessing.
         </p>
         
@@ -204,7 +233,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
             </div>
             <div className="flex items-center">
               <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">Enter</kbd>
-              <span>to go to the next page</span>
+              <span>to save changes</span>
             </div>
           </div>
         </div>
