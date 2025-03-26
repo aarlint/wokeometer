@@ -51,7 +51,7 @@ const NewAssessment = ({ setCurrentAssessment }) => {
         }
       );
       const data = await response.json();
-      setSearchResults(data.results.slice(0, 5));
+      setSearchResults(data.results);
     } catch (error) {
       console.error('Error searching TMDB:', error);
     } finally {

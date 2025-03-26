@@ -99,7 +99,12 @@ const ViewAssessment = () => {
           <div className="text-left">
             {assessment.questions.map((question) => (
               <div key={question.id} className="mb-4 pb-4 border-b border-glass-border">
-                <p className="font-medium mb-2">{question.text}</p>
+                <p className="font-medium mb-2">
+                  {question.text}
+                  <span className="ml-2 text-sm text-dark-muted">
+                    (Weight: {(question.weight * 100)}%)
+                  </span>
+                </p>
                 <p className={
                   question.answer === "Agree" || question.answer === "Strongly Agree" 
                   ? "text-category-very font-medium" 

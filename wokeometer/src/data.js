@@ -19,122 +19,146 @@ export const QUESTIONS = [
   {
     id: 1,
     text: "Background cast or extras: Exaggerated racial diversity in more than one scene",
-    answer: ""
+    answer: "",
+    weight: 0.60
   },
   {
     id: 2,
     text: "Racial diversity across cast is incongruous with show setting/locale",
-    answer: ""
+    answer: "",
+    weight: 0.70
   },
   {
     id: 3,
     text: "Overt marginalization of white cast",
-    answer: ""
+    answer: "",
+    weight: 0.90
   },
   {
     id: 4,
     text: "Religion: Overt anti-Christian rhetoric",
-    answer: ""
+    answer: "",
+    weight: 0.60
   },
   {
     id: 5,
     text: "Religion: Overt anti-semitic rhetoric",
-    answer: ""
+    answer: "",
+    weight: 0.60
   },
   {
     id: 6,
     text: "Religion: Sigificant depiction of non-Christian religion",
-    answer: ""
+    answer: "",
+    weight: 0.30
   },
   {
     id: 7,
     text: "Anti-nationalistic or anti-US rhetoric or theme",
-    answer: ""
+    answer: "",
+    weight: 0.40
   },
   {
     id: 8,
     text: "Gay man in significant role",
-    answer: ""
+    answer: "",
+    weight: 0.90
   },
   {
     id: 9,
     text: "Lesbian woman in significant role",
-    answer: ""
+    answer: "",
+    weight: 1.00
   },
   {
     id: 10,
     text: "Trans man in significant role",
-    answer: ""
+    answer: "",
+    weight: 1.00
   },
   {
     id: 11,
     text: "Trans woman in significant role",
-    answer: ""
+    answer: "",
+    weight: 1.00
   },
   {
     id: 12,
     text: "Individual of indeterminate gender in significant or background role",
-    answer: ""
+    answer: "",
+    weight: 0.70
   },
   {
     id: 13,
     text: "Gay couple in significant roles",
-    answer: ""
+    answer: "",
+    weight: 1.00
   },
   {
     id: 14,
     text: "Lesbian couple in significant roles",
-    answer: ""
+    answer: "",
+    weight: 1.00
   },
   {
     id: 15,
     text: "Trans couple in significant or background role",
-    answer: ""
+    answer: "",
+    weight: 1.00
   },
   {
     id: 16,
     text: "Other (furry, etc.) in significant or background role",
-    answer: ""
+    answer: "",
+    weight: 0.80
   },
   {
     id: 17,
     text: "Mixed race couple in significant or background roles",
-    answer: ""
+    answer: "",
+    weight: 0.60
   },
   {
     id: 18,
     text: "Mixed race gay/lesbian couple in significant roles",
-    answer: ""
+    answer: "",
+    weight: 1.00
   },
   {
     id: 19,
     text: "Black lead actor/actress in significant role",
-    answer: ""
+    answer: "",
+    weight: 0.50
   },
   {
     id: 20,
     text: "Asian lead actor/actress in significant role",
-    answer: ""
+    answer: "",
+    weight: 0.50
   },
   {
     id: 21,
     text: "Other non-white lead actor/actress in significant role",
-    answer: ""
+    answer: "",
+    weight: 0.50
   },
   {
     id: 22,
     text: "Lead actor/actress in role almost always associated with the opposite gender (i.e, a woman commando single-handedly fighting a platoon of men in an action movie)",
-    answer: ""
+    answer: "",
+    weight: 0.90
   },
   {
     id: 23,
     text: "Left-leaning geopolitical rhetoric (pro-Hamas, pro-terrorism, etc.)",
-    answer: ""
+    answer: "",
+    weight: 1.00
   },
   {
     id: 24,
     text: "Contains significantly altared characters (race or gender) from original classic storyline (e.g., a black Snow White, an Indian Ariel, etc.)",
-    answer: ""
+    answer: "",
+    weight: 1.00
   }
 ];
 
@@ -143,15 +167,11 @@ export const calculateScore = (answers) => {
   let totalScore = 0;
   
   for (const question of answers) {
-    if (question.answer === "Agree") {
-      totalScore += 5;
-    } else if (question.answer === "Strongly Agree") {
-      totalScore += 10;
-    }
-    // N/A and Disagree are 0 points
+    const basePoints = question.answer === "Agree" ? 5 : question.answer === "Strongly Agree" ? 10 : 0;
+    totalScore += basePoints * question.weight;
   }
   
-  return totalScore;
+  return Math.round(totalScore); // Round to nearest integer for cleaner display
 };
 
 // Get wokeness category based on score

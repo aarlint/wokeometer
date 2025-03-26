@@ -135,6 +135,9 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
           <div key={question.id} className="question">
             <label htmlFor={`question-${question.id}`} className="block font-medium mb-3">
               {question.text}
+              <span className="ml-2 text-sm text-dark-muted">
+                (Weight: {(question.weight * 100)}%)
+              </span>
             </label>
             <div className={`mt-3 ${ANSWER_OPTIONS_LAYOUT.horizontal ? 'sm:flex sm:flex-row sm:flex-wrap sm:gap-4' : 'flex flex-col'} gap-2`}>
               {ANSWER_OPTIONS.map(option => (
