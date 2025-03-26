@@ -7,6 +7,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        light: {
+          bg: '#ffffff',
+          card: '#f8f9fa',
+          border: '#e9ecef',
+          text: '#212529',
+          muted: '#6c757d',
+        },
         dark: {
           bg: '#121212',
           card: '#1e1e1e',

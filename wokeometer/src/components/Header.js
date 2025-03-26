@@ -1,9 +1,18 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { FaSun, FaMoon } from 'react-icons/fa';
+import { useTheme } from '../context/ThemeContext';
 
 const Header = () => {
+  const { isDark, toggleTheme } = useTheme();
+  const location = useLocation();
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
   return (
-    <header className="header py-4">
+    <header className="header py-4 bg-light-card dark:bg-dark-card border-b border-light-border dark:border-dark-border">
       <div className="container">
         <div className="flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold text-primary">
@@ -14,19 +23,53 @@ const Header = () => {
               WokeoMeter
             </span>
           </Link>
-          <nav>
-            <ul className="flex gap-6">
-              <li>
-                <Link to="/" className="text-dark-text hover:text-primary transition-colors">Home</Link>
-              </li>
-              <li>
-                <Link to="/new" className="text-dark-text hover:text-primary transition-colors">New Assessment</Link>
-              </li>
-              <li>
-                <Link to="/saved" className="text-dark-text hover:text-primary transition-colors">Saved Assessments</Link>
-              </li>
-            </ul>
-          </nav>
+          <div className="flex items-center gap-6">
+            <nav>
+              <ul className="flex gap-6">
+                <li>
+                  <Link 
+                    to="/" 
+                    className={`text-light-text dark:text-dark-text hover:text-primary transition-colors ${
+                      isActive('/') ? 'border-b-2 border-primary' : ''
+                    }`}
+                  >
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/new" 
+                    className={`text-light-text dark:text-dark-text hover:text-primary transition-colors ${
+                      isActive('/new') ? 'border-b-2 border-primary' : ''
+                    }`}
+                  >
+                    New Assessment
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/saved" 
+                    className={`text-light-text dark:text-dark-text hover:text-primary transition-colors ${
+                      isActive('/saved') ? 'border-b-2 border-primary' : ''
+                    }`}
+                  >
+                    Saved Assessments
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-light-border dark:border-dark-border transition-colors"
+              aria-label="Toggle theme"
+            >
+              {isDark ? (
+                <FaSun className="w-5 h-5 text-light-text dark:text-dark-text" />
+              ) : (
+                <FaMoon className="w-5 h-5 text-light-text dark:text-dark-text" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </header>

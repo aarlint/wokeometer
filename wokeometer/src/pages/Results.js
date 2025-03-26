@@ -32,7 +32,8 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
       currentAssessment.showName,
       currentAssessment.questions,
       score,
-      category
+      category,
+      currentAssessment.showDetails
     );
     
     setIsSaved(true);
@@ -56,15 +57,44 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
       <h2 className="text-3xl font-bold text-center mb-8">Assessment Results</h2>
       
       <div className="result-container">
-        <h3 className="text-2xl font-bold mb-2">
-          {currentAssessment.showName}
-          {currentAssessment.showType && ` (${currentAssessment.showType})`}
-        </h3>
-        
-        <div className="result-score">{score}</div>
-        
-        <div className={`result-category ${getCategoryClass()}`}>
-          {category || "No category"}
+        <div className="flex gap-6 mb-6">
+          {currentAssessment.showDetails?.poster_path && (
+            <img
+              src={`https://image.tmdb.org/t/p/w342${currentAssessment.showDetails.poster_path}`}
+              alt={currentAssessment.showName}
+              className="w-48 h-72 object-cover rounded-lg shadow-lg"
+            />
+          )}
+          <div className="flex-1">
+            <h3 className="text-2xl font-bold mb-2">
+              {currentAssessment.showName}
+              {currentAssessment.showType && ` (${currentAssessment.showType})`}
+            </h3>
+            
+            {currentAssessment.showDetails && (
+              <div className="space-y-2 text-sm text-dark-muted mb-4">
+                <p>
+                  <span className="font-medium">Release Date:</span>{' '}
+                  {currentAssessment.showDetails.release_date || currentAssessment.showDetails.first_air_date || 'N/A'}
+                </p>
+                <p>
+                  <span className="font-medium">Rating:</span>{' '}
+                  {currentAssessment.showDetails.vote_average ? `${currentAssessment.showDetails.vote_average.toFixed(1)}/10` : 'N/A'}
+                </p>
+                {currentAssessment.showDetails.overview && (
+                  <p className="line-clamp-3">
+                    <span className="font-medium">Overview:</span>{' '}
+                    {currentAssessment.showDetails.overview}
+                  </p>
+                )}
+              </div>
+            )}
+            
+            <div className="result-score">{score}</div>
+            <div className={`result-category ${getCategoryClass()}`}>
+              {category || "No category"}
+            </div>
+          </div>
         </div>
         
         <div className="flex justify-center gap-4 mb-6">

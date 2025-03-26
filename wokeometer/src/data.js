@@ -172,7 +172,7 @@ export const getWokenessCategory = (score) => {
 };
 
 // Save assessment to localStorage
-export const saveAssessment = (showName, questions, score, category) => {
+export const saveAssessment = (showName, questions, score, category, showDetails = null) => {
   const savedAssessments = JSON.parse(localStorage.getItem('wokeometerAssessments') || '[]');
   
   const assessment = {
@@ -181,7 +181,8 @@ export const saveAssessment = (showName, questions, score, category) => {
     date: new Date().toISOString(),
     questions: [...questions],
     score,
-    category
+    category,
+    showDetails
   };
   
   savedAssessments.push(assessment);
@@ -209,7 +210,7 @@ export const deleteAssessment = (id) => {
 };
 
 // Update an existing assessment
-export const updateAssessment = (id, showName, questions, score, category) => {
+export const updateAssessment = (id, showName, questions, score, category, showDetails = null) => {
   const savedAssessments = JSON.parse(localStorage.getItem('wokeometerAssessments') || '[]');
   const assessmentIndex = savedAssessments.findIndex(a => a.id === id);
   
@@ -223,7 +224,8 @@ export const updateAssessment = (id, showName, questions, score, category) => {
     questions: [...questions],
     score,
     category,
-    date: new Date().toISOString()
+    date: new Date().toISOString(),
+    showDetails
   };
   
   savedAssessments[assessmentIndex] = updatedAssessment;

@@ -5,6 +5,7 @@ import Modal from '../components/Modal';
 
 const SavedAssessments = () => {
   const [assessments, setAssessments] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     assessmentId: null,
@@ -18,6 +19,10 @@ const SavedAssessments = () => {
     const savedAssessments = loadAssessments();
     setAssessments(savedAssessments);
   }, []);
+  
+  const filteredAssessments = assessments.filter(assessment =>
+    assessment.showName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   
   const getCategoryClass = (category) => {
     if (category === "Limited Wokeness") return "text-category-limited";
@@ -86,6 +91,13 @@ const SavedAssessments = () => {
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold">Saved Assessments</h2>
         <div className="flex gap-4">
+          <input
+            type="text"
+            placeholder="Search assessments..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="form-input"
+          />
           <button
             onClick={handleExport}
             className="btn btn-secondary flex items-center gap-2"
@@ -116,7 +128,7 @@ const SavedAssessments = () => {
         </div>
       )}
       
-      {assessments.length === 0 ? (
+      {filteredAssessments.length === 0 ? (
         <div className="text-center card">
           <p className="text-dark-muted mb-6">No saved assessments found.</p>
           <button 
@@ -128,19 +140,40 @@ const SavedAssessments = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
-          {assessments.map((assessment) => (
+          {filteredAssessments.map((assessment) => (
             <div 
               key={assessment.id} 
               className="bg-dark-card rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer border border-dark-border hover:border-dark-border-hover"
               onClick={() => handleViewAssessment(assessment.id)}
             >
               <div className="space-y-4">
+                {assessment.showDetails?.poster_path && (
+                  <div className="flex justify-center mb-4">
+                    <img
+                      src={`https://image.tmdb.org/t/p/w342${assessment.showDetails.poster_path}`}
+                      alt={assessment.showName}
+                      className="w-32 h-48 object-cover rounded-lg shadow-md"
+                    />
+                  </div>
+                )}
                 <div className="flex flex-col gap-2">
                   <h3 className="text-xl font-bold text-white truncate">{assessment.showName}</h3>
                   <span className={`font-medium ${getCategoryClass(assessment.category)} text-lg`}>
                     {assessment.score} ({assessment.category})
                   </span>
                 </div>
+                {assessment.showDetails && (
+                  <div className="text-sm text-dark-muted space-y-1">
+                    <p>
+                      <span className="font-medium">Release Date:</span>{' '}
+                      {assessment.showDetails.release_date || assessment.showDetails.first_air_date || 'N/A'}
+                    </p>
+                    <p>
+                      <span className="font-medium">Rating:</span>{' '}
+                      {assessment.showDetails.vote_average ? `${assessment.showDetails.vote_average.toFixed(1)}/10` : 'N/A'}
+                    </p>
+                  </div>
+                )}
                 <div className="text-sm text-dark-muted">
                   {formatDate(assessment.date)}
                 </div>

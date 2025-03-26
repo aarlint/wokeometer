@@ -90,13 +90,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
         // If we have an onFinish handler, use it (for editing)
         onFinish();
       } else {
-        // Otherwise save as new assessment
-        saveAssessment(
-          currentAssessment.showName,
-          currentAssessment.questions,
-          score,
-          category
-        );
+        // Otherwise just navigate to results
         navigate('/results');
       }
     }

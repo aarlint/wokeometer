@@ -38,7 +38,8 @@ const EditAssessment = () => {
       currentAssessment.showName,
       currentAssessment.questions,
       score,
-      category
+      category,
+      currentAssessment.showDetails
     );
 
     navigate('/saved');
