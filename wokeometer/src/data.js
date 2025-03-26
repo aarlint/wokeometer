@@ -177,7 +177,7 @@ export const calculateScore = (answers) => {
 // Get wokeness category based on score
 export const getWokenessCategory = (score) => {
   if (score === 0) {
-    return "";
+    return "Based";
   } else if (score >= 0 && score <= 30) {
     return "Limited Wokeness";
   } else if (score > 30 && score <= 60) {
