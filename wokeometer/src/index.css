@@ -2,228 +2,154 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
+:root {
+  --glass-bg: rgba(30, 30, 30, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
 }
 
+@layer base {
+  body {
+    @apply bg-dark-bg text-dark-text;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .neoglass {
+    @apply bg-glass-bg backdrop-blur-md border border-glass-border rounded-xl;
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.3);
+  }
+  
+  .neoglass-hover:hover {
+    @apply bg-glass-highlight;
+    box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+  }
+  
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 ease-in-out;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white;
+  }
+  
+  .btn-primary:hover {
+    @apply bg-primary-hover;
+  }
+  
+  .btn-secondary {
+    @apply bg-glass-bg border border-glass-border text-dark-text;
+  }
+  
+  .btn-secondary:hover {
+    @apply bg-glass-highlight;
+  }
+  
+  .form-input {
+    @apply bg-glass-bg border border-glass-border rounded-lg px-4 py-2 text-dark-text focus:outline-none focus:ring-2 focus:ring-primary;
+  }
+  
+  .category-limited {
+    @apply bg-category-limited bg-opacity-20 text-category-limited;
+  }
+  
+  .category-woke {
+    @apply bg-category-woke bg-opacity-20 text-category-woke;
+  }
+  
+  .category-very {
+    @apply bg-category-very bg-opacity-20 text-category-very;
+  }
+  
+  .category-egregiously {
+    @apply bg-category-egregiously bg-opacity-30 text-white;
+  }
+}
+
+/* Custom container */
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  @apply max-w-6xl mx-auto px-4 py-6;
 }
 
-.form-container {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-bottom: 20px;
+/* Header styling */
+.header {
+  @apply bg-glass-bg backdrop-blur-md border-b border-glass-border mb-8;
 }
 
+/* Card styling */
+.card {
+  @apply neoglass p-6 mb-6 transition-all duration-300;
+}
+
+.card:hover {
+  @apply neoglass-hover;
+}
+
+/* Question styling */
 .question {
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
+  @apply border-b border-glass-border pb-4 mb-4;
 }
 
 .question:last-child {
-  border-bottom: none;
+  @apply border-b-0;
 }
 
+/* Custom select styling */
 select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-top: 8px;
-  background-color: white;
+  @apply bg-glass-bg border border-glass-border rounded-lg px-4 py-2 text-dark-text w-full mt-2 focus:outline-none focus:ring-2 focus:ring-primary;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a0a0a0'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.5em 1.5em;
 }
 
-.btn {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.2s;
-}
-
-.btn-primary {
-  background-color: #4a90e2;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #357bd8;
-}
-
-.btn-secondary {
-  background-color: #f5f5f5;
-  color: #333;
-  border: 1px solid #ddd;
-}
-
-.btn-secondary:hover {
-  background-color: #e5e5e5;
-}
-
+/* Result container */
 .result-container {
-  text-align: center;
-  padding: 30px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.result-title {
-  font-size: 28px;
-  margin-bottom: 20px;
+  @apply neoglass p-8 text-center;
 }
 
 .result-score {
-  font-size: 48px;
-  margin-bottom: 10px;
-  font-weight: bold;
+  @apply text-5xl font-bold mb-4 text-primary;
 }
 
 .result-category {
-  font-size: 24px;
-  padding: 10px 20px;
-  border-radius: 4px;
-  display: inline-block;
-  margin-bottom: 20px;
+  @apply inline-block px-6 py-2 rounded-full text-xl font-medium mb-6;
 }
 
-.category-limited {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.category-woke {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
-.category-very {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-.category-egregiously {
-  background-color: #721c24;
-  color: white;
-}
-
-.wizard-container {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.wizard-nav {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.nav-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.header {
-  background-color: #333;
-  color: white;
-  padding: 20px 0;
-  margin-bottom: 30px;
-}
-
-.header h1 {
-  margin: 0;
-  text-align: center;
-}
-
+/* Assessment card */
 .assessment-card {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  margin-bottom: 16px;
-  cursor: pointer;
+  @apply neoglass p-4 mb-4 cursor-pointer transition-all duration-300;
 }
 
 .assessment-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.assessment-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.assessment-title {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.assessment-score {
-  font-weight: bold;
-}
-
-.page-title {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.show-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-label {
-  font-weight: 600;
-  margin-bottom: 5px;
-}
-
-.form-input {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.questions-per-page {
-  margin-bottom: 20px;
+  @apply neoglass-hover;
 }
 
 /* Custom radio button styles */
 input[type="radio"] {
   appearance: none;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #ccc;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--glass-border);
   border-radius: 50%;
   position: relative;
-  margin-right: 8px;
-  vertical-align: -3px;
+  margin-right: 10px;
+  vertical-align: -4px;
   cursor: pointer;
+  background-color: var(--glass-bg);
 }
 
 input[type="radio"]:checked {
-  border-color: #4a90e2;
+  border-color: theme('colors.primary.DEFAULT');
 }
 
 input[type="radio"]:checked::before {
@@ -231,7 +157,7 @@ input[type="radio"]:checked::before {
   position: absolute;
   width: 10px;
   height: 10px;
-  background-color: #4a90e2;
+  background-color: theme('colors.primary.DEFAULT');
   border-radius: 50%;
   top: 50%;
   left: 50%;
@@ -239,19 +165,13 @@ input[type="radio"]:checked::before {
 }
 
 .radio-label {
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-  cursor: pointer;
+  @apply flex items-center px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer;
 }
 
 .radio-label:hover {
-  background-color: #f5f5f5;
+  @apply bg-glass-highlight;
 }
 
 .radio-label.selected {
-  background-color: #e8f0fe;
-  border-color: #4a90e2;
+  @apply bg-primary bg-opacity-10 border border-primary;
 }

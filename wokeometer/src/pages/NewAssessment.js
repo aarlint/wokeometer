@@ -35,12 +35,12 @@ const NewAssessment = ({ setCurrentAssessment }) => {
   
   return (
     <div>
-      <h2 className="page-title text-2xl font-bold">New Assessment</h2>
+      <h2 className="text-3xl font-bold text-center mb-8">New Assessment</h2>
       
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <form onSubmit={handleSubmit} className="show-form">
-          <div className="form-group">
-            <label htmlFor="showName" className="form-label">Show/Movie Name:</label>
+      <div className="max-w-2xl mx-auto card">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <div className="flex flex-col">
+            <label htmlFor="showName" className="text-dark-text font-medium mb-2">Show/Movie Name:</label>
             <input
               type="text"
               id="showName"
@@ -48,11 +48,12 @@ const NewAssessment = ({ setCurrentAssessment }) => {
               value={showName}
               onChange={(e) => setShowName(e.target.value)}
               required
+              placeholder="Enter show or movie name"
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="showType" className="form-label">Type:</label>
+          <div className="flex flex-col">
+            <label htmlFor="showType" className="text-dark-text font-medium mb-2">Type:</label>
             <select
               id="showType"
               className="form-input"
@@ -68,13 +69,13 @@ const NewAssessment = ({ setCurrentAssessment }) => {
             </select>
           </div>
           
-          <div className="form-group questions-per-page">
-            <label className="form-label">Questions Per Page:</label>
-            <div className="grid grid-cols-2 gap-3 mt-2">
+          <div className="flex flex-col mb-4">
+            <label className="text-dark-text font-medium mb-2">Questions Per Page:</label>
+            <div className="grid grid-cols-2 gap-4 mt-2">
               {[3, 5, 10, 24].map(num => (
                 <label 
                   key={num} 
-                  className={`radio-label border ${questionsPerPage === num ? 'selected' : ''}`}
+                  className={`radio-label ${questionsPerPage === num ? 'selected' : ''}`}
                 >
                   <input
                     type="radio"

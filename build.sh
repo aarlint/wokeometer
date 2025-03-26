@@ -18,7 +18,7 @@ npm run build
 
 # Check if build was successful
 if [ ! -d "build" ]; then
-  echo "❌ Build failed! The dist directory was not created."
+  echo "❌ Build failed! The build directory was not created."
   exit 1
 fi
 
@@ -34,27 +34,16 @@ find . -maxdepth 1 -type d -not -path "./wokeometer" -not -path "." -not -path "
 echo "📋 Copying build files to root..."
 cp -r wokeometer/build/* .
 
-# # Verify that assets from public directory were copied
-# echo "🔍 Verifying public assets..."
-# if [ -d "wokeometer/public" ] && [ "$(ls -A wokeometer/public)" ]; then
-#   # Check if at least one public directory exists in root
-#   PUBLIC_DIRS=("icons" "images")
-#   FOUND=false
+# Verify that index.html exists in root
+echo "🔍 Verifying build files..."
+if [ ! -f "index.html" ]; then
+  echo "❌ Build verification failed! index.html was not copied to root."
+  exit 1
+else
+  echo "✓ Build files verified."
+fi
 
-#   for DIR in "${PUBLIC_DIRS[@]}"; do
-#     if [ -d "$DIR" ]; then
-#       FOUND=true
-#       break
-#     fi
-#   done
-
-#   if [ "$FOUND" = false ]; then
-#     echo "⚠️ Warning: Public assets may not have been copied correctly."
-#     echo "Manually copying public directory contents..."
-#     cp -r wokeometer/public/* .
-#   else
-#     echo "✓ Public assets verified."
-#   fi
-# fi
+# Create a .nojekyll file to disable GitHub Pages Jekyll processing
+touch .nojekyll
 
 echo "✅ Build complete! Files are ready for GitHub Pages."

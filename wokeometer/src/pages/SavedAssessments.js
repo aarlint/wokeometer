@@ -13,10 +13,10 @@ const SavedAssessments = () => {
   }, []);
   
   const getCategoryClass = (category) => {
-    if (category === "Limited Wokeness") return "text-green-600";
-    if (category === "Woke") return "text-yellow-600";
-    if (category === "Very Woke") return "text-red-500";
-    if (category === "Egregiously Woke") return "text-red-700 font-bold";
+    if (category === "Limited Wokeness") return "text-category-limited";
+    if (category === "Woke") return "text-category-woke";
+    if (category === "Very Woke") return "text-category-very";
+    if (category === "Egregiously Woke") return "text-category-egregiously font-bold";
     return "";
   };
   
@@ -31,14 +31,14 @@ const SavedAssessments = () => {
   
   return (
     <div>
-      <h2 className="page-title text-2xl font-bold">Saved Assessments</h2>
+      <h2 className="text-3xl font-bold text-center mb-8">Saved Assessments</h2>
       
       {assessments.length === 0 ? (
-        <div className="text-center p-6 bg-white rounded-lg shadow">
-          <p className="text-gray-500">No saved assessments found.</p>
+        <div className="text-center card">
+          <p className="text-dark-muted mb-6">No saved assessments found.</p>
           <button 
             onClick={() => navigate('/new')} 
-            className="btn btn-primary mt-4"
+            className="btn btn-primary"
           >
             Create New Assessment
           </button>
@@ -51,13 +51,13 @@ const SavedAssessments = () => {
               className="assessment-card"
               onClick={() => handleViewAssessment(assessment.id)}
             >
-              <div className="assessment-header">
-                <h3 className="assessment-title">{assessment.showName}</h3>
-                <span className={`assessment-score ${getCategoryClass(assessment.category)}`}>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-bold">{assessment.showName}</h3>
+                <span className={`font-medium ${getCategoryClass(assessment.category)}`}>
                   {assessment.score} ({assessment.category})
                 </span>
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-dark-muted">
                 {formatDate(assessment.date)}
               </div>
             </div>

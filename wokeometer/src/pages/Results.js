@@ -28,7 +28,7 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
   
   const handleSave = () => {
     // Save the assessment
-    const savedAssessment = saveAssessment(
+    saveAssessment(
       currentAssessment.showName,
       currentAssessment.questions,
       score,
@@ -53,10 +53,10 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
   
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="page-title text-2xl font-bold">Assessment Results</h2>
+      <h2 className="text-3xl font-bold text-center mb-8">Assessment Results</h2>
       
       <div className="result-container">
-        <h3 className="result-title">
+        <h3 className="text-2xl font-bold mb-2">
           {currentAssessment.showName}
           {currentAssessment.showType && ` (${currentAssessment.showType})`}
         </h3>
@@ -73,15 +73,18 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
               Save Assessment
             </button>
           ) : (
-            <div className="text-green-600 font-medium">
+            <div className="text-category-limited font-medium flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
               Assessment saved!
             </div>
           )}
         </div>
         
-        <div className="mt-8">
-          <h4 className="text-lg font-medium mb-2">What does this mean?</h4>
-          <p className="mb-4">
+        <div className="mt-8 p-4 neoglass">
+          <h4 className="text-lg font-medium mb-4">What does this mean?</h4>
+          <p className="mb-4 text-dark-text">
             {category === "Limited Wokeness" && "This content contains minimal woke elements and can be enjoyed without much concern for ideological messaging."}
             {category === "Woke" && "This content contains noticeable woke elements and themes that may impact your viewing experience."}
             {category === "Very Woke" && "This content contains significant woke messaging and themes that are central to the viewing experience."}
@@ -89,7 +92,7 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
           </p>
         </div>
         
-        <div className="flex justify-center gap-4 mt-8">
+        <div className="flex justify-center gap-6 mt-8">
           <button onClick={handleNewAssessment} className="btn btn-secondary">
             New Assessment
           </button>

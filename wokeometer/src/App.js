@@ -13,7 +13,7 @@ function App() {
   
   return (
     <Router>
-      <div className="app">
+      <div className="min-h-screen bg-dark-bg">
         <Header />
         <div className="container">
           <Routes>

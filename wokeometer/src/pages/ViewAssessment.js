@@ -36,11 +36,11 @@ const ViewAssessment = () => {
   
   if (!assessment) {
     return (
-      <div className="text-center p-6">
-        <p>Assessment not found.</p>
+      <div className="text-center p-6 card">
+        <p className="text-dark-muted mb-6">Assessment not found.</p>
         <button 
           onClick={() => navigate('/saved')} 
-          className="btn btn-primary mt-4"
+          className="btn btn-primary"
         >
           Back to Saved Assessments
         </button>
@@ -50,11 +50,11 @@ const ViewAssessment = () => {
   
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="page-title text-2xl font-bold">Assessment Details</h2>
+      <h2 className="text-3xl font-bold text-center mb-8">Assessment Details</h2>
       
       <div className="result-container">
-        <h3 className="result-title">{assessment.showName}</h3>
-        <div className="text-sm text-gray-500 mb-6">
+        <h3 className="text-2xl font-bold mb-2">{assessment.showName}</h3>
+        <div className="text-sm text-dark-muted mb-6">
           Assessed on {formatDate(assessment.date)}
         </div>
         
@@ -64,17 +64,17 @@ const ViewAssessment = () => {
           {assessment.category}
         </div>
         
-        <div className="mt-8">
-          <h4 className="text-lg font-medium mb-4">Assessment Questions</h4>
+        <div className="mt-8 neoglass p-6">
+          <h4 className="text-xl font-medium mb-6 text-primary">Assessment Questions</h4>
           
           <div className="text-left">
             {assessment.questions.map((question) => (
-              <div key={question.id} className="mb-4 pb-4 border-b">
-                <p className="font-medium">{question.text}</p>
+              <div key={question.id} className="mb-4 pb-4 border-b border-glass-border">
+                <p className="font-medium mb-2">{question.text}</p>
                 <p className={
                   question.answer === "Agree" || question.answer === "Strongly Agree" 
-                  ? "text-red-600 font-medium" 
-                  : "text-gray-600"
+                  ? "text-category-very font-medium" 
+                  : "text-dark-muted"
                 }>
                   Answer: {question.answer}
                 </p>

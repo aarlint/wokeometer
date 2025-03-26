@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ANSWER_OPTIONS } from '../data';
+import { ANSWER_OPTIONS, ANSWER_OPTIONS_LAYOUT } from '../data';
 
 const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
   const [currentPage, setCurrentPage] = useState(currentAssessment.currentPage);
@@ -95,7 +95,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
   
   const canProceed = () => {
     // Check if all questions on the current page have been answered
-    return currentQuestions.every(q => q.answer !== "-- SELECT ONE --");
+    return currentQuestions.every(q => q.answer !== "");
   };
 
   // Handle clicking on the entire label
@@ -104,32 +104,32 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
   };
   
   return (
-    <div className="wizard-container">
-      <h2 className="page-title text-2xl font-bold">
-        Assessing: {currentAssessment.showName}
+    <div className="max-w-3xl mx-auto">
+      <h2 className="text-3xl font-bold text-center mb-8">
+        Assessing: <span className="text-primary">{currentAssessment.showName}</span>
         {currentAssessment.showType && ` (${currentAssessment.showType})`}
       </h2>
       
-      <div className="bg-white rounded-lg shadow-md p-6 mb-4">
-        <div className="mb-4 flex justify-between items-center">
+      <div className="card">
+        <div className="mb-6 flex justify-between items-center">
           <h3 className="text-lg font-semibold">
             Page {currentPage} of {totalPages}
           </h3>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-dark-muted">
             Showing questions {startIndex + 1} - {endIndex} of {currentAssessment.questions.length}
           </div>
         </div>
         
         {currentQuestions.map((question) => (
           <div key={question.id} className="question">
-            <label htmlFor={`question-${question.id}`} className="block font-medium mb-2">
+            <label htmlFor={`question-${question.id}`} className="block font-medium mb-3">
               {question.text}
             </label>
-            <div className="flex flex-col gap-2 mt-2">
+            <div className={`mt-3 ${ANSWER_OPTIONS_LAYOUT.horizontal ? 'sm:flex sm:flex-row sm:flex-wrap sm:gap-4' : 'flex flex-col'} gap-2`}>
               {ANSWER_OPTIONS.map(option => (
                 <label 
                   key={option} 
-                  className={`radio-label ${question.answer === option ? 'selected' : ''}`}
+                  className={`radio-label ${question.answer === option ? 'selected' : ''} ${ANSWER_OPTIONS_LAYOUT.horizontal ? 'sm:flex-1 sm:min-w-[120px]' : 'w-full'}`}
                   onClick={() => handleLabelClick(question.id, option)}
                 >
                   <input
@@ -146,7 +146,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
           </div>
         ))}
         
-        <div className="wizard-nav">
+        <div className="flex justify-between items-center mt-8">
           <button 
             onClick={handlePrevious} 
             className="btn btn-secondary" 
@@ -155,7 +155,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
             Previous
           </button>
           
-          <div className="text-center">
+          <div>
             {currentPage < totalPages ? (
               <button 
                 onClick={handleNext} 
@@ -177,20 +177,40 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment }) => {
         </div>
       </div>
       
-      <div className="text-center text-sm text-gray-500">
-        <p>Please answer all questions on this page before proceeding.</p>
-        <p>Select "N/A" for any questions that don't apply to the content you're assessing.</p>
+      <div className="mt-6 card">
+        <p className="text-dark-muted mb-4">
+          Please answer all questions on this page before proceeding.
+          Select "N/A" for any questions that don't apply to the content you're assessing.
+        </p>
         
-        <div className="mt-4 p-3 bg-gray-100 rounded-lg">
-          <p className="font-medium mb-2">Keyboard Shortcuts:</p>
-          <ul className="grid grid-cols-2 gap-2">
-            <li>Press <kbd className="px-2 py-1 bg-white border rounded">1</kbd> for "-- SELECT ONE --"</li>
-            <li>Press <kbd className="px-2 py-1 bg-white border rounded">2</kbd> for "N/A"</li>
-            <li>Press <kbd className="px-2 py-1 bg-white border rounded">3</kbd> for "Disagree"</li>
-            <li>Press <kbd className="px-2 py-1 bg-white border rounded">4</kbd> for "Agree"</li>
-            <li>Press <kbd className="px-2 py-1 bg-white border rounded">5</kbd> for "Strongly Agree"</li>
-            <li>Press <kbd className="px-2 py-1 bg-white border rounded">Enter</kbd> to go to the next page</li>
-          </ul>
+        <div className="p-4 neoglass">
+          <p className="font-medium mb-3">Keyboard Shortcuts:</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center">
+              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">1</kbd>
+              <span>for "-- SELECT ONE --"</span>
+            </div>
+            <div className="flex items-center">
+              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">2</kbd>
+              <span>for "N/A"</span>
+            </div>
+            <div className="flex items-center">
+              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">3</kbd>
+              <span>for "Disagree"</span>
+            </div>
+            <div className="flex items-center">
+              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">4</kbd>
+              <span>for "Agree"</span>
+            </div>
+            <div className="flex items-center">
+              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">5</kbd>
+              <span>for "Strongly Agree"</span>
+            </div>
+            <div className="flex items-center">
+              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">Enter</kbd>
+              <span>to go to the next page</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
