@@ -62,7 +62,6 @@ const EditAssessment = () => {
         parseInt(id),
         currentAssessment.showName,
         currentAssessment.questions,
-        score,
         category,
         currentAssessment.showDetails
       );

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { loadAssessmentsForShow, getAverageScoreForShow, deleteAssessment, useCurrentUserId } from '../lib/supabase-db';
-import { getWokenessCategory } from '../data';
+import { loadAssessmentsForShow, deleteAssessment, useCurrentUserId } from '../lib/supabase-db';
+import { calculateScore, getWokenessCategory } from '../data';
 import Modal from '../components/Modal';
 import AssessmentSummary from '../components/AssessmentSummary';
 import CommentsPanel from '../components/CommentsPanel';
@@ -53,7 +53,27 @@ const SavedAssessments = () => {
       const catalog = await Promise.all(
         uniqueShows.map(async (showName) => {
           const showAssessments = await loadAssessmentsForShow(showName);
-          const averageScore = await getAverageScoreForShow(showName);
+          
+          // Calculate scores for each assessment
+          const scores = showAssessments.map(assessment => {
+            let totalScore = 0;
+            
+            // Add points for each Agree/Strongly Agree answer based on weight
+            assessment.questions.forEach(q => {
+              if (q.answer === "Agree") {
+                totalScore += 5 * q.weight;
+              } else if (q.answer === "Strongly Agree") {
+                totalScore += 10 * q.weight;
+              }
+            });
+            
+            return Math.round(totalScore);
+          });
+          
+          // Calculate average score across all assessments
+          const averageScore = scores.length > 0 
+            ? Math.round(scores.reduce((acc, score) => acc + score, 0) / scores.length)
+            : 0;
           
           return {
             showName,
@@ -111,21 +131,13 @@ const SavedAssessments = () => {
     // Calculate scores for each question
     assessments.forEach(assessment => {
       assessment.questions.forEach(q => {
-        let answerValue = 0;
-        switch (q.answer) {
-          case "Agree":
-            answerValue = 5;
-            break;
-          case "Strongly Agree":
-            answerValue = 10;
-            break;
-          case "Disagree":
-          case "N/A":
-          default:
-            answerValue = 0;
+        if (q.answer === "Agree" || q.answer === "Strongly Agree") {
+          const basePoints = q.answer === "Agree" ? 5 : 10;
+          const weightedScore = basePoints * q.weight;
+          
+          questionScores[q.text] += weightedScore;
+          questionCounts[q.text]++;
         }
-        questionScores[q.text] += answerValue;
-        questionCounts[q.text]++;
       });
     });
 
@@ -133,7 +145,7 @@ const SavedAssessments = () => {
     const questionAverages = Object.entries(questionScores).map(([text, score]) => ({
       text,
       category: questionCategories[text],
-      average: score / questionCounts[text],
+      average: score / assessments.length, // Average across all assessments
       totalResponses: questionCounts[text]
     }));
 

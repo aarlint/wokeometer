@@ -37,7 +37,6 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
         userId,
         currentAssessment.showName,
         currentAssessment.questions,
-        score,
         category,
         currentAssessment.showDetails
       );

@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { useAuth0 } from '@auth0/auth0-react';
+import { calculateScore } from '../data';
 
 // Custom hook to get the current user's ID
 export const useCurrentUserId = () => {
@@ -8,7 +9,7 @@ export const useCurrentUserId = () => {
 };
 
 // Save a new assessment
-export const saveAssessment = async (userId, showName, questions, score, category, showDetails = null) => {
+export const saveAssessment = async (userId, showName, questions, category, showDetails = null) => {
   if (!userId) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
@@ -18,7 +19,6 @@ export const saveAssessment = async (userId, showName, questions, score, categor
         user_id: userId,
         show_name: showName,
         questions,
-        score,
         category,
         show_details: showDetails
       }
@@ -73,7 +73,7 @@ export const getAssessment = async (id) => {
 };
 
 // Update an assessment
-export const updateAssessment = async (userId, id, showName, questions, score, category, showDetails = null) => {
+export const updateAssessment = async (userId, id, showName, questions, category, showDetails = null) => {
   if (!userId) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
@@ -81,7 +81,6 @@ export const updateAssessment = async (userId, id, showName, questions, score, c
     .update({
       show_name: showName,
       questions,
-      score,
       category,
       show_details: showDetails,
       updated_at: new Date().toISOString()
@@ -158,7 +157,7 @@ export const getAverageScoreForShow = async (showName) => {
   try {
     const { data, error } = await supabase
       .from('assessments')
-      .select('score')
+      .select('questions')
       .eq('show_name', showName);
 
     if (error) throw error;
@@ -168,8 +167,10 @@ export const getAverageScoreForShow = async (showName) => {
       return 0;
     }
 
-    // Calculate average, handling any null scores
-    const validScores = data.map(a => a.score).filter(score => score !== null);
+    // Calculate scores from questions and average them
+    const scores = data.map(assessment => calculateScore(assessment.questions));
+    const validScores = scores.filter(score => score !== null);
+    
     if (validScores.length === 0) {
       return 0;
     }

@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS assessments (
   show_name TEXT NOT NULL,
   date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   questions JSONB NOT NULL,
-  score DECIMAL NOT NULL,
   category TEXT NOT NULL,
   show_details JSONB,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),

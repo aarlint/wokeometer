@@ -345,7 +345,7 @@ export const getWokenessCategory = (score) => {
 };
 
 // Save assessment to localStorage
-export const saveAssessment = (showName, questions, score, category, showDetails = null) => {
+export const saveAssessment = (showName, questions, category, showDetails = null) => {
   const savedAssessments = JSON.parse(localStorage.getItem('wokeometerAssessments') || '[]');
   
   // Filter out unanswered questions before saving
@@ -356,7 +356,6 @@ export const saveAssessment = (showName, questions, score, category, showDetails
     showName,
     date: new Date().toISOString(),
     questions: answeredQuestions, // Only save answered questions
-    score,
     category,
     showDetails
   };
@@ -369,7 +368,12 @@ export const saveAssessment = (showName, questions, score, category, showDetails
 
 // Load all assessments from localStorage
 export const loadAssessments = () => {
-  return JSON.parse(localStorage.getItem('wokeometerAssessments') || '[]');
+  const assessments = JSON.parse(localStorage.getItem('wokeometerAssessments') || '[]');
+  // Calculate scores for each assessment when loading
+  return assessments.map(assessment => ({
+    ...assessment,
+    score: calculateScore(assessment.questions)
+  }));
 };
 
 // Get assessment by ID
@@ -386,7 +390,7 @@ export const deleteAssessment = (id) => {
 };
 
 // Update an existing assessment
-export const updateAssessment = (id, showName, questions, score, category, showDetails = null) => {
+export const updateAssessment = (id, showName, questions, category, showDetails = null) => {
   const savedAssessments = JSON.parse(localStorage.getItem('wokeometerAssessments') || '[]');
   const assessmentIndex = savedAssessments.findIndex(a => a.id === id);
   
@@ -398,7 +402,6 @@ export const updateAssessment = (id, showName, questions, score, category, showD
     ...savedAssessments[assessmentIndex],
     showName,
     questions: [...questions],
-    score,
     category,
     date: new Date().toISOString(),
     showDetails
@@ -434,13 +437,14 @@ export const importAssessments = (jsonData) => {
     
     // Validate each assessment has required fields
     assessments.forEach(assessment => {
-      if (!assessment.id || !assessment.showName || !assessment.questions || !assessment.score || !assessment.category) {
+      if (!assessment.id || !assessment.showName || !assessment.questions || !assessment.category) {
         throw new Error('Invalid assessment format: missing required fields');
       }
     });
     
-    // Save to localStorage
-    localStorage.setItem('wokeometerAssessments', JSON.stringify(assessments));
+    // Save to localStorage without scores
+    const assessmentsWithoutScores = assessments.map(({ score, ...assessment }) => assessment);
+    localStorage.setItem('wokeometerAssessments', JSON.stringify(assessmentsWithoutScores));
     return true;
   } catch (error) {
     console.error('Error importing assessments:', error);
