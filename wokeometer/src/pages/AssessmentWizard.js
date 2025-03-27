@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ANSWER_OPTIONS, ANSWER_OPTIONS_LAYOUT, CATEGORIES, calculateScore, getWokenessCategory, saveAssessment } from '../data';
 import QuestionIconCard from '../components/QuestionIconCard';
+import { FaCheckCircle } from 'react-icons/fa';
 
 const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish }) => {
   const [currentCategory, setCurrentCategory] = useState(CATEGORIES[0]);
   const [hasAttemptedFinish, setHasAttemptedFinish] = useState(false);
+  const [noWokeContent, setNoWokeContent] = useState(false);
   const navigate = useNavigate();
   
   // Group questions by category
@@ -90,7 +92,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
       return;
     }
     
-    const score = calculateScore(currentAssessment.questions);
+    const score = noWokeContent ? 0 : calculateScore(currentAssessment.questions);
     const category = getWokenessCategory(score);
     
     if (onFinish) {
@@ -116,8 +118,8 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
   };
 
   const canProceed = () => {
-    // Check if at least one question has been answered with a non-N/A value
-    return currentAssessment.questions.some(q => q.answer && q.answer !== "" && q.answer !== "N/A");
+    // Allow proceeding if "No woke content" is checked or if at least one question is answered
+    return noWokeContent || currentAssessment.questions.some(q => q.answer && q.answer !== "" && q.answer !== "N/A");
   };
 
   // Handle clicking on the entire label
@@ -152,14 +154,40 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
         ))}
         
         <div className="flex flex-col items-center mt-8">
-          {!canProceed() && (
-            <span className="text-sm text-red-600 dark:text-red-400 mb-2">
-              Please answer at least one question to proceed
-            </span>
-          )}
           <div className="text-sm text-gray-600 dark:text-dark-muted mb-4">
             {getAnsweredCount()} answered, {getUnansweredCount()} unanswered
           </div>
+        </div>
+      </div>
+      
+      <div className="mt-6 card bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <FaCheckCircle className="text-2xl text-green-500" />
+            <div>
+              <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">No Woke Content</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Check this if the show has no woke elements</p>
+            </div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={noWokeContent}
+              onChange={(e) => setNoWokeContent(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+          </label>
+        </div>
+      </div>
+
+      <div className="mt-6 card bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border p-6">
+        <div className="flex flex-col items-center">
+          {!canProceed() && hasAttemptedFinish && (
+            <span className="text-sm text-red-600 dark:text-red-400 mb-2">
+              {noWokeContent ? 'Please confirm there is no woke content' : 'Please answer at least one question to proceed'}
+            </span>
+          )}
           <button 
             onClick={handleFinish} 
             className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}

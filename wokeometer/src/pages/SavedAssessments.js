@@ -18,7 +18,8 @@ import {
   FaThLarge, 
   FaList,
   FaSearch,
-  FaPlus
+  FaPlus,
+  FaCheckCircle
 } from 'react-icons/fa';
 
 const SavedAssessments = () => {
@@ -101,13 +102,28 @@ const SavedAssessments = () => {
           const averageScore = scores.length > 0 
             ? Math.round(scores.reduce((acc, score) => acc + score, 0) / scores.length)
             : 0;
+
+          // Collect all unique woke elements from all assessments
+          const allWokeElements = new Map();
+          mergedAssessments.forEach(assessment => {
+            assessment.questions.forEach(question => {
+              if (question.answer === "Yes" && !allWokeElements.has(question.id)) {
+                allWokeElements.set(question.id, question);
+              }
+            });
+          });
+          
+          // Find user's assessment
+          const userAssessment = userId ? mergedAssessments.find(a => a.user_id === userId) : null;
+          console.log('Show:', showName, 'User ID:', userId, 'User Assessment:', userAssessment);
           
           return {
             showName,
             assessments: mergedAssessments,
             averageScore,
             totalAssessments: mergedAssessments.length,
-            userAssessment: userId ? mergedAssessments.find(a => a.user_id === userId) : null
+            userAssessment,
+            allWokeElements: Array.from(allWokeElements.values())
           };
         })
       );
@@ -421,10 +437,9 @@ const SavedAssessments = () => {
                   {/* All Woke Elements */}
                   <div>
                     <h4 className="font-semibold text-gray-800 dark:text-dark-text mb-2">Woke Elements:</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {item.assessments[0]?.questions
-                        ?.filter(q => q.answer === "Yes")
-                        .map((question) => (
+                    {item.allWokeElements?.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {item.allWokeElements.map((question) => (
                           <QuestionIconCard
                             key={question.id}
                             question={question}
@@ -432,7 +447,13 @@ const SavedAssessments = () => {
                             interactive={false}
                           />
                         ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <FaCheckCircle className="text-xl text-green-500" />
+                        <span className="text-green-700 dark:text-green-400 font-medium">No woke elements!</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Assessment Button */}
