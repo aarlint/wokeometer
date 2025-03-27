@@ -4,11 +4,10 @@ import { ThemeProvider } from './context/ThemeContext';
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
 import { auth0Config } from './auth/auth0-config';
 import Header from './components/Header';
-import Home from './pages/Home';
+import SavedAssessments from './pages/SavedAssessments';
 import NewAssessment from './pages/NewAssessment';
 import AssessmentWizard from './pages/AssessmentWizard';
 import Results from './pages/Results';
-import SavedAssessments from './pages/SavedAssessments';
 import ViewAssessment from './pages/ViewAssessment';
 import EditAssessment from './pages/EditAssessment';
 
@@ -85,7 +84,7 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AppLayout>
-                    <Home />
+                    <SavedAssessments />
                   </AppLayout>
                 </ProtectedRoute>
               } 
@@ -128,16 +127,6 @@ function App() {
                       /> : 
                       <Navigate to="/new" />
                     }
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/saved" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <SavedAssessments />
                   </AppLayout>
                 </ProtectedRoute>
               } 

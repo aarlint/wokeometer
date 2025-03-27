@@ -94,8 +94,21 @@ const SavedAssessments = () => {
   
   return (
     <div>
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold mb-4">Welcome to <span className="text-primary">WokeoMeter</span></h1>
+        <p className="text-dark-muted mb-6">
+          Your catalog of media content assessments
+        </p>
+        <button 
+          onClick={() => navigate('/new')} 
+          className="btn btn-primary text-lg px-8 py-3"
+        >
+          Start New Assessment
+        </button>
+      </div>
+
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold">Saved Assessments</h2>
+        <h2 className="text-3xl font-bold">All Assessments</h2>
         <div className="flex gap-4">
           <input
             type="text"

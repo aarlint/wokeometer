@@ -121,16 +121,6 @@ const Header = () => {
                     New Assessment
                   </Link>
                 </li>
-                <li>
-                  <Link 
-                    to="/saved" 
-                    className={`text-light-text dark:text-dark-text hover:text-primary transition-colors ${
-                      isActive('/saved') ? 'border-b-2 border-primary' : ''
-                    }`}
-                  >
-                    Saved Assessments
-                  </Link>
-                </li>
               </ul>
             </nav>
             <AuthButton />
@@ -200,17 +190,6 @@ const Header = () => {
                     }`}
                   >
                     New Assessment
-                  </Link>
-                </li>
-                <li>
-                  <Link 
-                    to="/saved" 
-                    onClick={closeMobileMenu}
-                    className={`block py-2 text-light-text dark:text-dark-text hover:text-primary transition-colors ${
-                      isActive('/saved') ? 'border-l-4 border-primary' : ''
-                    }`}
-                  >
-                    Saved Assessments
                   </Link>
                 </li>
               </ul>
