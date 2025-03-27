@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { calculateScore, getWokenessCategory } from '../data';
-import { saveAssessment, useCurrentUserId } from '../lib/supabase-db';
+import { QUESTIONS, CATEGORIES, calculateScore, getWokenessCategory, saveAssessment } from '../data';
+import { useCurrentUserId } from '../lib/supabase-db';
+import StackedIcon from '../components/StackedIcon';
+import QuestionIconCard from '../components/QuestionIconCard';
 
 const Results = ({ currentAssessment, setCurrentAssessment }) => {
   const [score, setScore] = useState(0);
@@ -32,13 +34,35 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
   const handleSave = async () => {
     try {
       setError(null);
+      
+      // Ensure we have all required data
+      if (!currentAssessment || !currentAssessment.showName || !currentAssessment.questions) {
+        throw new Error('Missing required assessment data');
+      }
+
+      // Filter out unanswered questions and only keep id and answer
+      const answeredQuestions = currentAssessment.questions
+        .filter(q => q.answer && q.answer !== "" && q.answer !== "N/A")
+        .map(q => ({
+          id: q.id,
+          answer: q.answer
+        }));
+
+      // Create a clean assessment object
+      const assessmentToSave = {
+        showName: currentAssessment.showName,
+        questions: answeredQuestions,
+        category,
+        showDetails: currentAssessment.showDetails || null
+      };
+
       // Save the assessment
       await saveAssessment(
         userId,
-        currentAssessment.showName,
-        currentAssessment.questions,
-        category,
-        currentAssessment.showDetails
+        assessmentToSave.showName,
+        assessmentToSave.questions,
+        assessmentToSave.category,
+        assessmentToSave.showDetails
       );
       
       setIsSaved(true);
@@ -105,26 +129,21 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
         </div>
         
         <div className="mt-8 neoglass p-6">
-          <h4 className="text-xl font-medium mb-6 text-primary">Assessment Questions</h4>
+          <h4 className="text-xl font-medium mb-6 text-primary">Woke Elements</h4>
           
           <div className="text-left">
-            {currentAssessment.questions.map((question) => (
-              <div key={question.id} className="mb-4 pb-4 border-b border-glass-border">
-                <p className="font-medium mb-2">
-                  {question.text}
-                  <span className="ml-2 text-sm text-dark-muted">
-                    (Weight: {(question.weight * 100)}%)
-                  </span>
-                </p>
-                <p className={
-                  question.answer === "Agree" || question.answer === "Strongly Agree" 
-                  ? "text-category-very font-medium" 
-                  : "text-dark-muted"
-                }>
-                  Answer: {question.answer}
-                </p>
-              </div>
-            ))}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {currentAssessment.questions
+                .filter(q => q.answer === "Yes")
+                .map((question) => (
+                  <QuestionIconCard
+                    key={question.id}
+                    question={question}
+                    size="medium"
+                    interactive={false}
+                  />
+                ))}
+            </div>
           </div>
         </div>
         

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAssessment, updateAssessment, useCurrentUserId } from '../lib/supabase-db';
-import { calculateScore, getWokenessCategory } from '../data';
+import { calculateScore, getWokenessCategory, QUESTIONS } from '../data';
 import AssessmentWizard from './AssessmentWizard';
 
 const EditAssessment = () => {
@@ -32,12 +32,25 @@ const EditAssessment = () => {
         return;
       }
 
-      // Prepare the assessment for the wizard - show all questions at once
+      // Create a map of saved answers by question ID
+      const savedAnswers = assessment.questions.reduce((acc, q) => {
+        acc[q.id] = q.answer;
+        return acc;
+      }, {});
+
+      // Merge all questions from data.js with saved answers
+      const mergedQuestions = QUESTIONS.map(question => ({
+        ...question,
+        answer: savedAnswers[question.id] || "" // Use saved answer if exists, otherwise empty string
+      }));
+
+      // Prepare the assessment for the wizard
       const wizardAssessment = {
         ...assessment,
         showName: assessment.show_name,
         showDetails: assessment.show_details,
-        questionsPerPage: assessment.questions.length, // Show all questions at once
+        questions: mergedQuestions,
+        questionsPerPage: mergedQuestions.length, // Show all questions at once
         currentPage: 1,
         totalPages: 1 // Only one page since we're showing all questions
       };

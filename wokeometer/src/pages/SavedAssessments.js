@@ -2,11 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { loadAssessmentsForShow, deleteAssessment, useCurrentUserId } from '../lib/supabase-db';
-import { calculateScore, getWokenessCategory } from '../data';
+import { calculateScore, getWokenessCategory, QUESTIONS } from '../data';
 import Modal from '../components/Modal';
 import AssessmentSummary from '../components/AssessmentSummary';
 import CommentsPanel from '../components/CommentsPanel';
-import { FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaEye, FaEllipsisV, FaComments, FaThLarge, FaList } from 'react-icons/fa';
+import QuestionIconCard from '../components/QuestionIconCard';
+import { 
+  FaEdit, 
+  FaTrash, 
+  FaSortUp, 
+  FaSortDown, 
+  FaEye, 
+  FaEllipsisV, 
+  FaComments, 
+  FaThLarge, 
+  FaList,
+  FaSearch,
+  FaPlus
+} from 'react-icons/fa';
 
 const SavedAssessments = () => {
   const [assessments, setAssessments] = useState([]);
@@ -54,15 +67,29 @@ const SavedAssessments = () => {
         uniqueShows.map(async (showName) => {
           const showAssessments = await loadAssessmentsForShow(showName);
           
+          // Merge saved question data with full question data from data.js
+          const mergedAssessments = showAssessments.map(assessment => {
+            const mergedQuestions = assessment.questions.map(savedQ => {
+              const fullQuestion = QUESTIONS.find(q => q.id === savedQ.id);
+              return {
+                ...fullQuestion,
+                answer: savedQ.answer
+              };
+            });
+            
+            return {
+              ...assessment,
+              questions: mergedQuestions
+            };
+          });
+          
           // Calculate scores for each assessment
-          const scores = showAssessments.map(assessment => {
+          const scores = mergedAssessments.map(assessment => {
             let totalScore = 0;
             
-            // Add points for each Agree/Strongly Agree answer based on weight
+            // Add points for each Yes answer based on weight
             assessment.questions.forEach(q => {
-              if (q.answer === "Agree") {
-                totalScore += 5 * q.weight;
-              } else if (q.answer === "Strongly Agree") {
+              if (q.answer === "Yes") {
                 totalScore += 10 * q.weight;
               }
             });
@@ -77,10 +104,10 @@ const SavedAssessments = () => {
           
           return {
             showName,
-            assessments: showAssessments,
+            assessments: mergedAssessments,
             averageScore,
-            totalAssessments: showAssessments.length,
-            userAssessment: userId ? showAssessments.find(a => a.user_id === userId) : null
+            totalAssessments: mergedAssessments.length,
+            userAssessment: userId ? mergedAssessments.find(a => a.user_id === userId) : null
           };
         })
       );
@@ -112,50 +139,6 @@ const SavedAssessments = () => {
       }
     });
   
-  const getTopWokeThings = (assessments) => {
-    const questionScores = {};
-    const questionCounts = {};
-    const questionCategories = {};
-
-    // Initialize question tracking
-    assessments.forEach(assessment => {
-      assessment.questions.forEach(q => {
-        if (!questionScores[q.text]) {
-          questionScores[q.text] = 0;
-          questionCounts[q.text] = 0;
-          questionCategories[q.text] = q.category;
-        }
-      });
-    });
-
-    // Calculate scores for each question
-    assessments.forEach(assessment => {
-      assessment.questions.forEach(q => {
-        if (q.answer === "Agree" || q.answer === "Strongly Agree") {
-          const basePoints = q.answer === "Agree" ? 5 : 10;
-          const weightedScore = basePoints * q.weight;
-          
-          questionScores[q.text] += weightedScore;
-          questionCounts[q.text]++;
-        }
-      });
-    });
-
-    // Calculate averages and sort
-    const questionAverages = Object.entries(questionScores).map(([text, score]) => ({
-      text,
-      category: questionCategories[text],
-      average: score / assessments.length, // Average across all assessments
-      totalResponses: questionCounts[text]
-    }));
-
-    // Sort by average score and get top 3, filtering out zero scores
-    return questionAverages
-      .filter(q => q.average > 0)
-      .sort((a, b) => b.average - a.average)
-      .slice(0, 3);
-  };
-
   const getCategoryClass = (score) => {
     if (score === 0) return "text-category-based";
     if (score > 0 && score <= 20) return "text-category-limited";
@@ -249,15 +232,17 @@ const SavedAssessments = () => {
         {userId ? (
           <button 
             onClick={() => navigate('/new')} 
-            className="btn btn-primary text-lg px-8 py-3"
+            className="btn btn-primary text-lg px-8 py-3 flex items-center gap-2"
           >
+            <FaPlus className="w-5 h-5" />
             Start New Assessment
           </button>
         ) : (
           <button 
             onClick={() => navigate('/login', { state: { redirectTo: '/saved' } })} 
-            className="btn btn-primary text-lg px-8 py-3"
+            className="btn btn-primary text-lg px-8 py-3 flex items-center gap-2"
           >
+            <FaPlus className="w-5 h-5" />
             Login to Start Assessing
           </button>
         )}
@@ -291,13 +276,18 @@ const SavedAssessments = () => {
               {sortAscending ? <FaSortUp className="w-5 h-5 text-gray-700 dark:text-dark-text" /> : <FaSortDown className="w-5 h-5 text-gray-700 dark:text-dark-text" />}
             </button>
           </div>
-          <input
-            type="text"
-            placeholder="Search Media..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="form-input bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text placeholder-gray-400 dark:placeholder-gray-500"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search Media..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="form-input bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text placeholder-gray-400 dark:placeholder-gray-500 pl-10"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="h-5 w-5 text-gray-400" />
+            </div>
+          </div>
         </div>
       </div>
       
@@ -363,19 +353,21 @@ const SavedAssessments = () => {
                   </div>
                 )}
               </div>
-              <div 
-                className="p-6"
-                onClick={() => handleViewSummary(item)}
-              >
-                <div className="flex gap-6">
+              <div className="p-6">
+                {/* First Row: Poster and Movie Info */}
+                <div className="flex gap-6 mb-6 border-b border-gray-200 dark:border-dark-border pb-6">
+                  {/* Left side - Poster */}
                   {item.assessments[0]?.show_details?.poster_path && (
-                    <img
-                      src={`https://image.tmdb.org/t/p/w342${item.assessments[0].show_details.poster_path}`}
-                      alt={item.showName}
-                      className="w-32 h-48 object-cover rounded-lg shadow-lg"
-                    />
+                    <div className="flex-shrink-0">
+                      <img
+                        src={`https://image.tmdb.org/t/p/w342${item.assessments[0].show_details.poster_path}`}
+                        alt={item.showName}
+                        className="w-32 h-48 object-cover rounded-lg shadow-lg"
+                      />
+                    </div>
                   )}
-                  <div className="flex-1">
+                  {/* Right side - Movie Info */}
+                  <div className="flex-grow">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-xl font-bold text-gray-800 dark:text-dark-text">{item.showName}</h3>
                       <button
@@ -388,7 +380,7 @@ const SavedAssessments = () => {
                     </div>
                     
                     {item.assessments[0]?.show_details && (
-                      <div className="space-y-1 text-sm text-gray-600 dark:text-dark-muted mb-4">
+                      <div className="space-y-2 text-sm text-gray-600 dark:text-dark-muted">
                         <p>
                           <span className="font-medium">Release Date:</span>{' '}
                           {item.assessments[0].show_details.release_date || item.assessments[0].show_details.first_air_date || 'N/A'}
@@ -398,81 +390,72 @@ const SavedAssessments = () => {
                           {item.assessments[0].show_details.vote_average ? `${item.assessments[0].show_details.vote_average.toFixed(1)}/10` : 'N/A'}
                         </p>
                         {item.assessments[0].show_details.overview && (
-                          <p className="line-clamp-2">
+                          <p className="line-clamp-3">
                             <span className="font-medium">Overview:</span>{' '}
                             {item.assessments[0].show_details.overview}
                           </p>
                         )}
                       </div>
                     )}
-                    
-                    <div className="mb-4">
+                  </div>
+                </div>
+
+                {/* Second Row: Score and Woke Elements */}
+                <div className="space-y-6">
+                  {/* Score and Category */}
+                  <div className="flex items-center justify-between">
+                    <div>
                       <p className="text-2xl font-bold mb-1 text-gray-800 dark:text-dark-text">Score: {item.averageScore}</p>
                       <p className={`text-lg ${getCategoryClass(item.averageScore)}`}>
                         {getWokenessCategory(item.averageScore)}
                       </p>
                     </div>
-                    
-                    <div className="mb-4">
-                      {getTopWokeThings(item.assessments).length > 0 && (
-                        <>
-                          <h4 className="font-semibold text-gray-800 dark:text-dark-text mb-2">Top Woke Elements:</h4>
-                          <div className="space-y-2">
-                            {getTopWokeThings(item.assessments).map((thing, index) => (
-                              <div key={index} className="flex items-center justify-between text-sm">
-                                <div>
-                                  <span className="text-gray-600 dark:text-dark-muted">{thing.text}</span>
-                                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                                    ({thing.category})
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className={`font-medium ${getScoreColorClass(thing.average)}`}>
-                                    {thing.average.toFixed(1)}
-                                  </span>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    ({thing.totalResponses} responses)
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    
-                    <div className="mb-4">
-                      <div className="text-sm text-gray-600 dark:text-dark-muted">
-                        {item.totalAssessments} assessment{item.totalAssessments !== 1 ? 's' : ''}
-                      </div>
+                    <div className="text-right text-sm text-gray-600 dark:text-dark-muted">
+                      <div>{item.totalAssessments} assessment{item.totalAssessments !== 1 ? 's' : ''}</div>
                       {item.assessments[0]?.questions && (
-                        <div className="text-sm text-gray-600 dark:text-dark-muted">
-                          {item.assessments[0].questions.filter(q => q.answer && q.answer !== "" && q.answer !== "N/A").length} answered questions
-                        </div>
+                        <div>{item.assessments[0].questions.filter(q => q.answer && q.answer !== "" && q.answer !== "N/A").length} answered questions</div>
                       )}
                     </div>
-
-                    {!item.userAssessment && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!userId) {
-                            navigate('/login', { state: { redirectTo: '/saved' } });
-                            return;
-                          }
-                          navigate('/new', { 
-                            state: { 
-                              showName: item.showName,
-                              showDetails: item.assessments[0]?.show_details || null
-                            } 
-                          });
-                        }}
-                        className="btn btn-primary w-full"
-                      >
-                        {userId ? 'Assess Now' : 'Login to Assess'}
-                      </button>
-                    )}
                   </div>
+
+                  {/* All Woke Elements */}
+                  <div>
+                    <h4 className="font-semibold text-gray-800 dark:text-dark-text mb-2">Woke Elements:</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {item.assessments[0]?.questions
+                        ?.filter(q => q.answer === "Yes")
+                        .map((question) => (
+                          <QuestionIconCard
+                            key={question.id}
+                            question={question}
+                            size="small"
+                            interactive={false}
+                          />
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Assessment Button */}
+                  {!item.userAssessment && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!userId) {
+                          navigate('/login', { state: { redirectTo: '/saved' } });
+                          return;
+                        }
+                        navigate('/new', { 
+                          state: { 
+                            showName: item.showName,
+                            showDetails: item.assessments[0]?.show_details || null
+                          } 
+                        });
+                      }}
+                      className="btn btn-primary w-full mt-4"
+                    >
+                      {userId ? 'Assess Now' : 'Login to Assess'}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

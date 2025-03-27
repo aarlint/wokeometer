@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ANSWER_OPTIONS, ANSWER_OPTIONS_LAYOUT, CATEGORIES, calculateScore, getWokenessCategory, saveAssessment } from '../data';
+import QuestionIconCard from '../components/QuestionIconCard';
 
 const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish }) => {
   const [currentCategory, setCurrentCategory] = useState(CATEGORIES[0]);
@@ -30,8 +31,8 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
   // Add keyboard shortcuts for answering questions
   useEffect(() => {
     const handleKeyPress = (e) => {
-      // Only process number keys 1-5
-      if (e.key >= '1' && e.key <= '5') {
+      // Only process number keys 1-3
+      if (e.key >= '1' && e.key <= '3') {
         const numKey = parseInt(e.key);
         
         // Check if we have a focused/active question
@@ -61,7 +62,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
         }
       } else if (e.key === 'Enter' && canProceed()) {
         // Enter key to proceed to next category or finish
-        handleNext();
+        handleFinish();
       }
     };
     
@@ -83,28 +84,19 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
     });
   };
   
-  const handleNext = () => {
-    const currentIndex = CATEGORIES.indexOf(currentCategory);
-    if (currentIndex < CATEGORIES.length - 1) {
-      setCurrentCategory(CATEGORIES[currentIndex + 1]);
+  const handleFinish = () => {
+    if (!canProceed()) {
+      setHasAttemptedFinish(true);
+      return;
+    }
+    
+    const score = calculateScore(currentAssessment.questions);
+    const category = getWokenessCategory(score);
+    
+    if (onFinish) {
+      onFinish();
     } else {
-      // If we're on the last category, check if we can proceed
-      if (!canProceed()) {
-        setHasAttemptedFinish(true);
-        return;
-      }
-      
-      // If we can proceed, calculate results and save
-      const score = calculateScore(currentAssessment.questions);
-      const category = getWokenessCategory(score);
-      
-      if (onFinish) {
-        // If we have an onFinish handler, use it (for editing)
-        onFinish();
-      } else {
-        // Otherwise just navigate to results
-        navigate('/results');
-      }
+      navigate('/results');
     }
   };
   
@@ -134,138 +126,55 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
   };
   
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <h2 className="text-3xl font-bold text-center mb-8 text-gray-800 dark:text-dark-text">
         {onFinish ? 'Editing' : 'Assessing'}: <span className="text-primary">{currentAssessment.showName}</span>
         {currentAssessment.showType && ` (${currentAssessment.showType})`}
       </h2>
       
-      {/* Category Tabs */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="card bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border p-6">
         {CATEGORIES.map((category) => (
-          <button
-            key={category}
-            onClick={() => setCurrentCategory(category)}
-            className={`px-4 py-2 rounded-lg whitespace-nowrap ${
-              currentCategory === category
-                ? 'bg-primary text-white'
-                : 'bg-white dark:bg-dark-card text-gray-700 dark:text-dark-text hover:bg-gray-50 dark:hover:bg-dark-card-hover'
-            }`}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
-      
-      <div className="card bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border">
-        <div className="mb-6 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text">
-            {currentCategory}
-          </h3>
-          <div className="text-sm text-gray-600 dark:text-dark-muted">
-            Showing {currentQuestions.length} questions
-          </div>
-        </div>
-        
-        {currentQuestions.map((question) => (
-          <div key={question.id} className={`question border-b border-gray-200 dark:border-dark-border pb-4 mb-4`}>
-            <label htmlFor={`question-${question.id}`} className="block font-medium mb-3 text-gray-800 dark:text-dark-text">
-              {question.text}
-              <span className="ml-2 text-sm text-gray-600 dark:text-dark-muted">
-                (Weight: {(question.weight * 100)}%)
-              </span>
-            </label>
-            <div className={`mt-3 ${ANSWER_OPTIONS_LAYOUT.horizontal ? 'sm:flex sm:flex-row sm:flex-wrap sm:gap-4' : 'flex flex-col'} gap-2`}>
-              {ANSWER_OPTIONS.map(option => (
-                <label 
-                  key={option} 
-                  className={`radio-label ${question.answer === option ? 'selected bg-primary/10 border-primary' : 'hover:bg-gray-50 dark:hover:bg-dark-card-hover'} ${ANSWER_OPTIONS_LAYOUT.horizontal ? 'sm:flex-1 sm:min-w-[120px]' : 'w-full'}`}
-                  onClick={() => handleLabelClick(question.id, option)}
-                >
-                  <input
-                    type="radio"
-                    name={`question-${question.id}`}
-                    value={option}
-                    checked={question.answer === option}
-                    onChange={() => handleAnswerChange(question.id, option)}
-                  />
-                  <span className="text-gray-700 dark:text-dark-text">{option}</span>
-                </label>
+          <div key={category} className="mb-8">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-dark-text mb-4">
+              {category}
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {questionsByCategory[category]?.map((question) => (
+                <QuestionIconCard
+                  key={question.id}
+                  question={question}
+                  onClick={() => handleAnswerChange(question.id, question.answer === "Yes" ? "" : "Yes")}
+                  size="large"
+                />
               ))}
             </div>
           </div>
         ))}
         
-        <div className="flex justify-between items-center mt-8">
-          <button 
-            onClick={handlePrevious} 
-            className="btn bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text hover:bg-gray-50 dark:hover:bg-dark-card-hover" 
-            disabled={currentCategory === CATEGORIES[0]}
-          >
-            Previous Category
-          </button>
-          
-          <div className="flex flex-col items-end">
-            {!canProceed() && (
-              <span className="text-sm text-red-600 dark:text-red-400 mb-2">
-                Please answer at least one question to proceed
-              </span>
-            )}
-            <div className="text-sm text-gray-600 dark:text-dark-muted mb-2">
-              {getAnsweredCount()} answered, {getUnansweredCount()} unanswered
-            </div>
-            {currentCategory !== CATEGORIES[CATEGORIES.length - 1] ? (
-              <button 
-                onClick={handleNext} 
-                className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
-                disabled={!canProceed()}
-              >
-                Next Category
-              </button>
-            ) : (
-              <button 
-                onClick={handleNext} 
-                className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
-                disabled={!canProceed()}
-              >
-                {onFinish ? 'Save Changes' : 'Finish'}
-              </button>
-            )}
+        <div className="flex flex-col items-center mt-8">
+          {!canProceed() && (
+            <span className="text-sm text-red-600 dark:text-red-400 mb-2">
+              Please answer at least one question to proceed
+            </span>
+          )}
+          <div className="text-sm text-gray-600 dark:text-dark-muted mb-4">
+            {getAnsweredCount()} answered, {getUnansweredCount()} unanswered
           </div>
+          <button 
+            onClick={handleFinish} 
+            className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
+            disabled={!canProceed()}
+          >
+            {onFinish ? 'Save Changes' : 'Finish Assessment'}
+          </button>
         </div>
       </div>
       
-      <div className="mt-6 card bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border">
+      <div className="mt-6 card bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border p-6">
         <p className="text-gray-600 dark:text-dark-muted mb-4">
-          Answer the questions that apply to the content you're assessing.
-          Questions left unanswered or marked as "N/A" will not be included in the final assessment.
+          Click an icon to mark it as "Yes". Click again to unmark it.
+          Questions left unmarked will not be included in the final assessment.
         </p>
-        
-        <div className="p-4 bg-gray-50 dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded-xl">
-          <p className="font-medium mb-3 text-gray-800 dark:text-dark-text">Keyboard Shortcuts:</p>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">1</kbd>
-              <span className="text-gray-700 dark:text-dark-text">for "N/A"</span>
-            </div>
-            <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">2</kbd>
-              <span className="text-gray-700 dark:text-dark-text">for "Disagree"</span>
-            </div>
-            <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">3</kbd>
-              <span className="text-gray-700 dark:text-dark-text">for "Agree"</span>
-            </div>
-            <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">4</kbd>
-              <span className="text-gray-700 dark:text-dark-text">for "Strongly Agree"</span>
-            </div>
-            <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">Enter</kbd>
-              <span className="text-gray-700 dark:text-dark-text">to proceed to next category</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

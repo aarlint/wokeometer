@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAssessment, useCurrentUserId } from '../lib/supabase-db';
-import { getWokenessCategory } from '../data';
+import { getWokenessCategory, QUESTIONS } from '../data';
+import QuestionIconCard from '../components/QuestionIconCard';
 
 const ViewAssessment = () => {
   const { id } = useParams();
@@ -26,8 +27,20 @@ const ViewAssessment = () => {
         setError('Assessment not found');
         return;
       }
+
+      // Merge saved question data with full question data from data.js
+      const mergedQuestions = assessmentData.questions.map(savedQ => {
+        const fullQuestion = QUESTIONS.find(q => q.id === savedQ.id);
+        return {
+          ...fullQuestion,
+          answer: savedQ.answer
+        };
+      });
       
-      setAssessment(assessmentData);
+      setAssessment({
+        ...assessmentData,
+        questions: mergedQuestions
+      });
     } catch (err) {
       setError('Failed to load assessment. Please try again.');
       console.error('Error loading assessment:', err);
@@ -53,6 +66,11 @@ const ViewAssessment = () => {
   }
 
   const isUserAssessment = assessment.user_id === userId;
+
+  // Filter questions by answer
+  const yesQuestions = assessment.questions.filter(q => q.answer === "Yes");
+  const noQuestions = assessment.questions.filter(q => q.answer === "No");
+  const naQuestions = assessment.questions.filter(q => q.answer === "N/A" || !q.answer);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -118,13 +136,60 @@ const ViewAssessment = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
-            {assessment.questions.map((q, index) => (
-              <div key={index} className="border-b border-dark-border pb-4 last:border-0">
-                <p className="font-medium mb-2">{q.text}</p>
-                <p className="text-dark-muted">Answer: {q.answer}</p>
+          <div className="space-y-6">
+            {/* Woke Elements Section */}
+            {yesQuestions.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-gray-800 dark:text-dark-text mb-2">Woke Elements:</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {yesQuestions.map((question) => (
+                    <QuestionIconCard
+                      key={question.id}
+                      question={question}
+                      size="small"
+                      interactive={false}
+                      showTooltip={true}
+                    />
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
+
+            {/* Non-Woke Elements Section */}
+            {noQuestions.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-gray-800 dark:text-dark-text mb-2">Non-Woke Elements:</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {noQuestions.map((question) => (
+                    <QuestionIconCard
+                      key={question.id}
+                      question={question}
+                      size="small"
+                      interactive={false}
+                      showTooltip={true}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Unanswered Questions Section */}
+            {naQuestions.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-gray-800 dark:text-dark-text mb-2">Unanswered Questions:</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {naQuestions.map((question) => (
+                    <QuestionIconCard
+                      key={question.id}
+                      question={question}
+                      size="small"
+                      interactive={false}
+                      showTooltip={true}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -133,11 +198,11 @@ const ViewAssessment = () => {
 };
 
 const getCategoryClass = (score) => {
-  if (score === 0) return "text-category-limited";
-  if (score > 0 && score <= 30) return "text-category-limited";
-  if (score > 30 && score <= 60) return "text-category-woke";
-  if (score > 60 && score <= 120) return "text-category-very";
-  if (score > 120) return "text-category-egregiously";
+  if (score === 0) return "text-category-based";
+  if (score > 0 && score <= 20) return "text-category-limited";
+  if (score > 20 && score <= 40) return "text-category-woke";
+  if (score > 40 && score <= 60) return "text-category-very";
+  if (score > 60) return "text-category-egregiously";
   return "";
 };
 
