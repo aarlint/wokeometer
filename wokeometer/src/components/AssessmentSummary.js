@@ -22,8 +22,21 @@ const AssessmentSummary = ({ show, onClose }) => {
     // Calculate averages
     show.assessments.forEach(assessment => {
       assessment.questions.forEach(q => {
-        const weight = q.weight || 1;
-        questionAverages[q.text] += weight;
+        // Convert answer to points based on data.js scoring system
+        let answerValue = 0;
+        switch (q.answer) {
+          case "Agree":
+            answerValue = 5;
+            break;
+          case "Strongly Agree":
+            answerValue = 10;
+            break;
+          case "Disagree":
+          case "N/A":
+          default:
+            answerValue = 0;
+        }
+        questionAverages[q.text] += answerValue;
         questionCounts[q.text]++;
       });
     });
@@ -90,10 +103,15 @@ const AssessmentSummary = ({ show, onClose }) => {
                   <div className="flex-1 bg-dark-card-hover rounded-full h-2">
                     <div
                       className="bg-primary h-2 rounded-full"
-                      style={{ width: `${(average / 5) * 100}%` }}
+                      style={{ width: `${(average / 10) * 100}%` }}
                     />
                   </div>
-                  <span className="text-dark-muted">{average.toFixed(1)}/5</span>
+                  <span className="text-dark-muted">{average.toFixed(1)}/10</span>
+                </div>
+                <div className="flex justify-between text-xs text-dark-muted mt-1">
+                  <span>0</span>
+                  <span>5 (Agree)</span>
+                  <span>10 (Strongly Agree)</span>
                 </div>
               </div>
             ))}

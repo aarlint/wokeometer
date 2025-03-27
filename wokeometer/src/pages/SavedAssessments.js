@@ -5,7 +5,7 @@ import { loadAssessmentsForShow, getAverageScoreForShow, deleteAssessment, useCu
 import { getWokenessCategory } from '../data';
 import Modal from '../components/Modal';
 import AssessmentSummary from '../components/AssessmentSummary';
-import { FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaEye } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaEye, FaEllipsisV } from 'react-icons/fa';
 
 const SavedAssessments = () => {
   const [assessments, setAssessments] = useState([]);
@@ -143,9 +143,9 @@ const SavedAssessments = () => {
   return (
     <div>
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4">Welcome to <span className="text-primary">WokeoMeter</span></h1>
+        <h1 className="text-4xl font-bold mb-4">Welcome to <span className="text-primary">Woke-O-Meter</span></h1>
         <p className="text-dark-muted mb-6">
-          Your catalog of media content assessments
+          The only media content assessment you'll ever need.
         </p>
         <button 
           onClick={() => navigate('/new')} 
@@ -203,19 +203,59 @@ const SavedAssessments = () => {
               key={item.showName}
               className="card cursor-pointer hover:bg-dark-card-hover transition-colors relative"
             >
-              {item.userAssessment && (
-                <div className="absolute top-0 right-0 bg-primary text-white px-3 py-1 rounded-bl-lg text-sm font-medium">
-                  Your Assessment
-                </div>
-              )}
+              <div className="absolute top-0 right-0 z-10">
+                {item.userAssessment && (
+                  <div className="relative">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const dropdown = e.currentTarget.nextElementSibling;
+                        dropdown.classList.toggle('hidden');
+                      }}
+                      className="p-2 hover:bg-dark-card-hover rounded-lg transition-colors"
+                    >
+                      <FaEllipsisV className="w-5 h-5" />
+                    </button>
+                    <div className="hidden absolute right-0 top-12 w-48 bg-dark-card rounded-lg shadow-lg z-10">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewAssessment(item.userAssessment.id);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-dark-card-hover flex items-center gap-2"
+                      >
+                        <FaEye className="w-4 h-4" />
+                        <span>View</span>
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/edit/${item.userAssessment.id}`);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-dark-card-hover flex items-center gap-2"
+                      >
+                        <FaEdit className="w-4 h-4" />
+                        <span>Edit</span>
+                      </button>
+                      <button 
+                        onClick={(e) => handleDeleteClick(e, item.userAssessment.id, item.showName)}
+                        className="w-full px-4 py-2 text-left hover:bg-dark-card-hover flex items-center gap-2 text-red-400"
+                      >
+                        <FaTrash className="w-4 h-4" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div 
                 className="p-6"
                 onClick={() => handleViewSummary(item)}
               >
                 <div className="flex gap-6">
-                  {item.userAssessment?.show_details?.poster_path && (
+                  {item.assessments[0]?.show_details?.poster_path && (
                     <img
-                      src={`https://image.tmdb.org/t/p/w342${item.userAssessment.show_details.poster_path}`}
+                      src={`https://image.tmdb.org/t/p/w342${item.assessments[0].show_details.poster_path}`}
                       alt={item.showName}
                       className="w-32 h-48 object-cover rounded-lg shadow-lg"
                     />
@@ -223,20 +263,20 @@ const SavedAssessments = () => {
                   <div className="flex-1">
                     <h3 className="text-xl font-bold mb-2">{item.showName}</h3>
                     
-                    {item.userAssessment?.show_details && (
+                    {item.assessments[0]?.show_details && (
                       <div className="space-y-1 text-sm text-dark-muted mb-4">
                         <p>
                           <span className="font-medium">Release Date:</span>{' '}
-                          {item.userAssessment.show_details.release_date || item.userAssessment.show_details.first_air_date || 'N/A'}
+                          {item.assessments[0].show_details.release_date || item.assessments[0].show_details.first_air_date || 'N/A'}
                         </p>
                         <p>
                           <span className="font-medium">Rating:</span>{' '}
-                          {item.userAssessment.show_details.vote_average ? `${item.userAssessment.show_details.vote_average.toFixed(1)}/10` : 'N/A'}
+                          {item.assessments[0].show_details.vote_average ? `${item.assessments[0].show_details.vote_average.toFixed(1)}/10` : 'N/A'}
                         </p>
-                        {item.userAssessment.show_details.overview && (
+                        {item.assessments[0].show_details.overview && (
                           <p className="line-clamp-2">
                             <span className="font-medium">Overview:</span>{' '}
-                            {item.userAssessment.show_details.overview}
+                            {item.assessments[0].show_details.overview}
                           </p>
                         )}
                       </div>
@@ -249,40 +289,20 @@ const SavedAssessments = () => {
                       </p>
                     </div>
                     
-                    <p className="text-dark-muted">
+                    <p className="text-dark-muted mb-4">
                       {item.totalAssessments} assessment{item.totalAssessments !== 1 ? 's' : ''}
                     </p>
 
-                    {item.userAssessment && (
-                      <div className="mt-4 flex justify-between items-center gap-3">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewAssessment(item.userAssessment.id);
-                          }}
-                          className="btn btn-primary flex-1 flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors"
-                        >
-                          <FaEye className="w-4 h-4" />
-                          <span>View</span>
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/edit/${item.userAssessment.id}`);
-                          }}
-                          className="btn btn-secondary flex-1 flex items-center justify-center gap-2 hover:bg-secondary-hover transition-colors"
-                        >
-                          <FaEdit className="w-4 h-4" />
-                          <span>Edit</span>
-                        </button>
-                        <button 
-                          onClick={(e) => handleDeleteClick(e, item.userAssessment.id, item.showName)}
-                          className="btn btn-danger flex-1 flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
-                        >
-                          <FaTrash className="w-4 h-4" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
+                    {!item.userAssessment && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/new', { state: { showName: item.showName } });
+                        }}
+                        className="btn btn-primary w-full"
+                      >
+                        Assess Now
+                      </button>
                     )}
                   </div>
                 </div>
