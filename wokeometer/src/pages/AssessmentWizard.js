@@ -4,6 +4,7 @@ import { ANSWER_OPTIONS, ANSWER_OPTIONS_LAYOUT, calculateScore, getWokenessCateg
 
 const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish }) => {
   const [currentPage, setCurrentPage] = useState(currentAssessment.currentPage);
+  const [hasAttemptedFinish, setHasAttemptedFinish] = useState(false);
   const navigate = useNavigate();
   
   const questionsPerPage = currentAssessment.questionsPerPage;
@@ -82,7 +83,13 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     } else {
-      // If we're on the last page, calculate results and save
+      // If we're on the last page, check if we can proceed
+      if (!canProceed()) {
+        setHasAttemptedFinish(true);
+        return;
+      }
+      
+      // If we can proceed, calculate results and save
       const score = calculateScore(currentAssessment.questions);
       const category = getWokenessCategory(score);
       
@@ -103,8 +110,12 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
   };
   
   const canProceed = () => {
-    // Check if all questions on the current page have been answered
-    return currentQuestions.every(q => q.answer !== "");
+    // Check if all questions across all pages have been answered
+    return currentAssessment.questions.every(q => q.answer !== "");
+  };
+
+  const getUnansweredCount = () => {
+    return currentAssessment.questions.filter(q => q.answer === "").length;
   };
 
   // Handle clicking on the entire label
@@ -114,36 +125,41 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
   
   return (
     <div className="max-w-3xl mx-auto">
-      <h2 className="text-3xl font-bold text-center mb-8">
+      <h2 className="text-3xl font-bold text-center mb-8 text-gray-800 dark:text-dark-text">
         {onFinish ? 'Editing' : 'Assessing'}: <span className="text-primary">{currentAssessment.showName}</span>
         {currentAssessment.showType && ` (${currentAssessment.showType})`}
       </h2>
       
-      <div className="card">
+      <div className="card bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border">
         {totalPages > 1 && (
           <div className="mb-6 flex justify-between items-center">
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text">
               Page {currentPage} of {totalPages}
             </h3>
-            <div className="text-sm text-dark-muted">
+            <div className="text-sm text-gray-600 dark:text-dark-muted">
               Showing questions {startIndex + 1} - {endIndex} of {currentAssessment.questions.length}
             </div>
           </div>
         )}
         
         {currentQuestions.map((question) => (
-          <div key={question.id} className="question">
-            <label htmlFor={`question-${question.id}`} className="block font-medium mb-3">
+          <div key={question.id} className={`question border-b border-gray-200 dark:border-dark-border pb-4 mb-4 ${hasAttemptedFinish && !question.answer ? 'bg-red-50 dark:bg-red-900/20' : ''}`}>
+            <label htmlFor={`question-${question.id}`} className="block font-medium mb-3 text-gray-800 dark:text-dark-text">
               {question.text}
-              <span className="ml-2 text-sm text-dark-muted">
+              <span className="ml-2 text-sm text-gray-600 dark:text-dark-muted">
                 (Weight: {(question.weight * 100)}%)
               </span>
+              {hasAttemptedFinish && !question.answer && (
+                <span className="ml-2 text-sm text-red-600 dark:text-red-400">
+                  (Required)
+                </span>
+              )}
             </label>
             <div className={`mt-3 ${ANSWER_OPTIONS_LAYOUT.horizontal ? 'sm:flex sm:flex-row sm:flex-wrap sm:gap-4' : 'flex flex-col'} gap-2`}>
               {ANSWER_OPTIONS.map(option => (
                 <label 
                   key={option} 
-                  className={`radio-label ${question.answer === option ? 'selected' : ''} ${ANSWER_OPTIONS_LAYOUT.horizontal ? 'sm:flex-1 sm:min-w-[120px]' : 'w-full'}`}
+                  className={`radio-label ${question.answer === option ? 'selected bg-primary/10 border-primary' : 'hover:bg-gray-50 dark:hover:bg-dark-card-hover'} ${ANSWER_OPTIONS_LAYOUT.horizontal ? 'sm:flex-1 sm:min-w-[120px]' : 'w-full'}`}
                   onClick={() => handleLabelClick(question.id, option)}
                 >
                   <input
@@ -153,7 +169,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
                     checked={question.answer === option}
                     onChange={() => handleAnswerChange(question.id, option)}
                   />
-                  <span>{option}</span>
+                  <span className="text-gray-700 dark:text-dark-text">{option}</span>
                 </label>
               ))}
             </div>
@@ -164,17 +180,22 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
           <div className="flex justify-between items-center mt-8">
             <button 
               onClick={handlePrevious} 
-              className="btn btn-secondary" 
+              className="btn bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text hover:bg-gray-50 dark:hover:bg-dark-card-hover" 
               disabled={currentPage === 1}
             >
               Previous
             </button>
             
-            <div>
+            <div className="flex flex-col items-end">
+              {!canProceed() && (
+                <span className="text-sm text-red-600 dark:text-red-400 mb-2">
+                  {getUnansweredCount()} question{getUnansweredCount() !== 1 ? 's' : ''} remaining
+                </span>
+              )}
               {currentPage < totalPages ? (
                 <button 
                   onClick={handleNext} 
-                  className="btn btn-primary" 
+                  className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
                   disabled={!canProceed()}
                 >
                   Next
@@ -182,7 +203,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
               ) : (
                 <button 
                   onClick={handleNext} 
-                  className="btn btn-primary" 
+                  className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
                   disabled={!canProceed()}
                 >
                   {onFinish ? 'Save Changes' : 'Finish'}
@@ -191,10 +212,15 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
             </div>
           </div>
         ) : (
-          <div className="flex justify-end mt-8">
+          <div className="flex flex-col items-end mt-8">
+            {!canProceed() && (
+              <span className="text-sm text-red-600 dark:text-red-400 mb-2">
+                {getUnansweredCount()} question{getUnansweredCount() !== 1 ? 's' : ''} remaining
+              </span>
+            )}
             <button 
               onClick={handleNext} 
-              className="btn btn-primary" 
+              className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
               disabled={!canProceed()}
             >
               {onFinish ? 'Save Changes' : 'Finish'}
@@ -203,34 +229,34 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
         )}
       </div>
       
-      <div className="mt-6 card">
-        <p className="text-dark-muted mb-4">
+      <div className="mt-6 card bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border">
+        <p className="text-gray-600 dark:text-dark-muted mb-4">
           Please answer all questions before proceeding.
           Select "N/A" for any questions that don't apply to the content you're assessing.
         </p>
         
-        <div className="p-4 neoglass">
-          <p className="font-medium mb-3">Keyboard Shortcuts:</p>
+        <div className="p-4 bg-gray-50 dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded-xl">
+          <p className="font-medium mb-3 text-gray-800 dark:text-dark-text">Keyboard Shortcuts:</p>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">1</kbd>
-              <span>for "N/A"</span>
+              <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">1</kbd>
+              <span className="text-gray-700 dark:text-dark-text">for "N/A"</span>
             </div>
             <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">2</kbd>
-              <span>for "Disagree"</span>
+              <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">2</kbd>
+              <span className="text-gray-700 dark:text-dark-text">for "Disagree"</span>
             </div>
             <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">3</kbd>
-              <span>for "Agree"</span>
+              <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">3</kbd>
+              <span className="text-gray-700 dark:text-dark-text">for "Agree"</span>
             </div>
             <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">4</kbd>
-              <span>for "Strongly Agree"</span>
+              <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">4</kbd>
+              <span className="text-gray-700 dark:text-dark-text">for "Strongly Agree"</span>
             </div>
             <div className="flex items-center">
-              <kbd className="px-2 py-1 bg-glass-bg border border-glass-border rounded mr-2">Enter</kbd>
-              <span>to save changes</span>
+              <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">Enter</kbd>
+              <span className="text-gray-700 dark:text-dark-text">to save changes</span>
             </div>
           </div>
         </div>

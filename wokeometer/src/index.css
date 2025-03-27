@@ -22,13 +22,13 @@
 
 @layer components {
   .neoglass {
-    @apply bg-glass-bg backdrop-blur-md border border-glass-border rounded-xl;
-    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.3);
+    @apply bg-light-card dark:bg-glass-bg backdrop-blur-md border border-light-border dark:border-glass-border rounded-xl;
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1);
   }
   
   .neoglass-hover:hover {
-    @apply bg-glass-highlight;
-    box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.4);
+    @apply bg-gray-50 dark:bg-glass-highlight;
+    box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
     transition: all 0.3s ease;
   }

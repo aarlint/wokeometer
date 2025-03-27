@@ -132,7 +132,7 @@ export const addComment = async (userId, showName, comment) => {
 export const loadCommentsForShow = async (showName) => {
   const { data, error } = await supabase
     .from('comments')
-    .select('*, profiles:user_id(*)')
+    .select('*')
     .eq('show_name', showName)
     .order('created_at', { ascending: false });
 

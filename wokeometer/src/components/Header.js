@@ -85,7 +85,7 @@ const Header = () => {
   };
 
   return (
-    <header className="header py-4 bg-light-card dark:bg-dark-card border-b border-light-border dark:border-dark-border">
+    <header className="py-4 bg-white dark:bg-dark-card border-b border-gray-200 dark:border-dark-border shadow-sm">
       <div className="container">
         <div className="flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold text-primary">
@@ -104,7 +104,7 @@ const Header = () => {
                 <li>
                   <Link 
                     to="/" 
-                    className={`text-light-text dark:text-dark-text hover:text-primary transition-colors ${
+                    className={`text-gray-700 dark:text-dark-text hover:text-primary transition-colors ${
                       isActive('/') ? 'border-b-2 border-primary' : ''
                     }`}
                   >
@@ -114,7 +114,7 @@ const Header = () => {
                 <li>
                   <Link 
                     to="/new" 
-                    className={`text-light-text dark:text-dark-text hover:text-primary transition-colors ${
+                    className={`text-gray-700 dark:text-dark-text hover:text-primary transition-colors ${
                       isActive('/new') ? 'border-b-2 border-primary' : ''
                     }`}
                   >
@@ -126,13 +126,13 @@ const Header = () => {
             <AuthButton />
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-light-border dark:border-dark-border transition-colors"
+              className="p-2 rounded-lg bg-white dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-gray-200 dark:border-dark-border transition-colors"
               aria-label="Toggle theme"
             >
               {isDark ? (
-                <FaSun className="w-5 h-5 text-light-text dark:text-dark-text" />
+                <FaSun className="w-5 h-5 text-gray-700 dark:text-dark-text" />
               ) : (
-                <FaMoon className="w-5 h-5 text-light-text dark:text-dark-text" />
+                <FaMoon className="w-5 h-5 text-gray-700 dark:text-dark-text" />
               )}
             </button>
           </div>
@@ -142,24 +142,24 @@ const Header = () => {
             <AuthButton />
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-light-border dark:border-dark-border transition-colors"
+              className="p-2 rounded-lg bg-white dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-gray-200 dark:border-dark-border transition-colors"
               aria-label="Toggle theme"
             >
               {isDark ? (
-                <FaSun className="w-5 h-5 text-light-text dark:text-dark-text" />
+                <FaSun className="w-5 h-5 text-gray-700 dark:text-dark-text" />
               ) : (
-                <FaMoon className="w-5 h-5 text-light-text dark:text-dark-text" />
+                <FaMoon className="w-5 h-5 text-gray-700 dark:text-dark-text" />
               )}
             </button>
             <button
               onClick={toggleMobileMenu}
-              className="p-2 rounded-lg bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-light-border dark:border-dark-border transition-colors"
+              className="p-2 rounded-lg bg-white dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-gray-200 dark:border-dark-border transition-colors"
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
-                <FaTimes className="w-5 h-5 text-light-text dark:text-dark-text" />
+                <FaTimes className="w-5 h-5 text-gray-700 dark:text-dark-text" />
               ) : (
-                <FaBars className="w-5 h-5 text-light-text dark:text-dark-text" />
+                <FaBars className="w-5 h-5 text-gray-700 dark:text-dark-text" />
               )}
             </button>
           </div>
@@ -174,7 +174,7 @@ const Header = () => {
                   <Link 
                     to="/" 
                     onClick={closeMobileMenu}
-                    className={`block py-2 text-light-text dark:text-dark-text hover:text-primary transition-colors ${
+                    className={`block py-2 text-gray-700 dark:text-dark-text hover:text-primary transition-colors ${
                       isActive('/') ? 'border-l-4 border-primary' : ''
                     }`}
                   >
@@ -185,7 +185,7 @@ const Header = () => {
                   <Link 
                     to="/new" 
                     onClick={closeMobileMenu}
-                    className={`block py-2 text-light-text dark:text-dark-text hover:text-primary transition-colors ${
+                    className={`block py-2 text-gray-700 dark:text-dark-text hover:text-primary transition-colors ${
                       isActive('/new') ? 'border-l-4 border-primary' : ''
                     }`}
                   >

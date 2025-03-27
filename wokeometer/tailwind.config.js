@@ -9,10 +9,10 @@ module.exports = {
       colors: {
         light: {
           bg: '#ffffff',
-          card: '#f8f9fa',
+          card: '#ffffff',
           border: '#e9ecef',
-          text: '#212529',
-          muted: '#6c757d',
+          text: '#4a5568',
+          muted: '#718096',
         },
         dark: {
           bg: '#121212',

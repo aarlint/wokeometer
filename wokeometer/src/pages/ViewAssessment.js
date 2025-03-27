@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getAssessment, loadCommentsForShow, addComment, deleteComment, useCurrentUserId } from '../lib/supabase-db';
+import { getAssessment, useCurrentUserId } from '../lib/supabase-db';
 import { getWokenessCategory } from '../data';
-import Modal from '../components/Modal';
 
 const ViewAssessment = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [assessment, setAssessment] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
-  const [deleteModal, setDeleteModal] = useState({
-    isOpen: false,
-    commentId: null
-  });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const userId = useCurrentUserId();
@@ -35,54 +28,12 @@ const ViewAssessment = () => {
       }
       
       setAssessment(assessmentData);
-      
-      // Load comments for this show
-      const showComments = await loadCommentsForShow(assessmentData.show_name);
-      setComments(showComments);
     } catch (err) {
       setError('Failed to load assessment. Please try again.');
       console.error('Error loading assessment:', err);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-    
-    try {
-      setError(null);
-      const comment = await addComment(userId, assessment.show_name, newComment.trim());
-      setComments([comment, ...comments]);
-      setNewComment('');
-    } catch (err) {
-      setError('Failed to add comment. Please try again.');
-      console.error('Error adding comment:', err);
-    }
-  };
-
-  const handleDeleteClick = (e, commentId) => {
-    e.stopPropagation();
-    setDeleteModal({
-      isOpen: true,
-      commentId
-    });
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      setError(null);
-      await deleteComment(userId, deleteModal.commentId);
-      setComments(comments.filter(c => c.id !== deleteModal.commentId));
-      setDeleteModal({ isOpen: false, commentId: null });
-    } catch (err) {
-      setError('Failed to delete comment. Please try again.');
-      console.error('Error deleting comment:', err);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteModal({ isOpen: false, commentId: null });
   };
 
   if (loading) {
@@ -131,7 +82,7 @@ const ViewAssessment = () => {
         </div>
       )}
 
-      <div className="card mb-8">
+      <div className="card">
         <div className="p-6">
           <div className="flex gap-6 mb-6">
             {assessment.show_details?.poster_path && (
@@ -177,61 +128,6 @@ const ViewAssessment = () => {
           </div>
         </div>
       </div>
-
-      <div className="card">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Comments</h2>
-          
-          <div className="mb-6">
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Add a comment..."
-              className="form-textarea w-full mb-2"
-              rows="3"
-            />
-            <button 
-              onClick={handleAddComment}
-              className="btn btn-primary"
-              disabled={!newComment.trim()}
-            >
-              Add Comment
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {comments.map((comment) => (
-              <div key={comment.id} className="border-b border-dark-border pb-4 last:border-0">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium">{comment.profiles?.username || 'Anonymous'}</p>
-                    <p className="text-dark-muted text-sm mb-2">
-                      {new Date(comment.created_at).toLocaleDateString()}
-                    </p>
-                    <p>{comment.comment}</p>
-                  </div>
-                  {comment.user_id === userId && (
-                    <button
-                      onClick={(e) => handleDeleteClick(e, comment.id)}
-                      className="text-red-500 hover:text-red-400"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <Modal
-        isOpen={deleteModal.isOpen}
-        onClose={handleDeleteCancel}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Comment"
-        message="Are you sure you want to delete this comment? This action cannot be undone."
-      />
     </div>
   );
 };
