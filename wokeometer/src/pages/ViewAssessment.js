@@ -1,43 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getAssessment } from '../data';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getAssessment } from '../lib/supabase-db';
 
 const ViewAssessment = () => {
-  const [assessment, setAssessment] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
-  
+  const [assessment, setAssessment] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    // Convert id to number (since it comes from URL as string)
-    const assessmentId = parseInt(id);
-    
-    // Get the assessment by ID
-    const foundAssessment = getAssessment(assessmentId);
-    
-    if (foundAssessment) {
-      setAssessment(foundAssessment);
-    }
+    loadAssessment();
   }, [id]);
-  
-  const getCategoryClass = () => {
-    if (!assessment) return "";
-    
-    if (assessment.category === "Limited Wokeness") return "category-limited";
-    if (assessment.category === "Woke") return "category-woke";
-    if (assessment.category === "Very Woke") return "category-very";
-    if (assessment.category === "Egregiously Woke") return "category-egregiously";
-    return "";
+
+  const loadAssessment = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getAssessment(parseInt(id));
+      if (!data) {
+        setError('Assessment not found');
+        return;
+      }
+
+      // Transform the data to match the expected format
+      const transformedAssessment = {
+        ...data,
+        showName: data.show_name,
+        showDetails: data.show_details
+      };
+
+      setAssessment(transformedAssessment);
+    } catch (err) {
+      setError('Failed to load assessment. Please try again.');
+      console.error('Error loading assessment:', err);
+    } finally {
+      setLoading(false);
+    }
   };
-  
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
-  
-  if (!assessment) {
+
+  if (loading) {
     return (
-      <div className="text-center p-6 card">
-        <p className="text-dark-muted mb-6">Assessment not found.</p>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-xl">Loading assessment...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-2xl mx-auto card">
+        <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
+        <p className="text-dark-muted mb-6">{error}</p>
         <button 
           onClick={() => navigate('/saved')} 
           className="btn btn-primary"
@@ -47,13 +61,16 @@ const ViewAssessment = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-3xl font-bold text-center mb-8">Assessment Details</h2>
-      
-      <div className="result-container">
-        <div className="flex gap-6 mb-6">
+      <div className="card">
+        <h2 className="text-3xl font-bold text-center mb-8">
+          Assessment for: <span className="text-primary">{assessment.showName}</span>
+          {assessment.showType && ` (${assessment.showType})`}
+        </h2>
+        
+        <div className="flex gap-6 mb-8">
           {assessment.showDetails?.poster_path && (
             <img
               src={`https://image.tmdb.org/t/p/w342${assessment.showDetails.poster_path}`}
@@ -62,11 +79,6 @@ const ViewAssessment = () => {
             />
           )}
           <div className="flex-1">
-            <h3 className="text-2xl font-bold mb-2">{assessment.showName}</h3>
-            <div className="text-sm text-dark-muted mb-4">
-              Assessed on {formatDate(assessment.date)}
-            </div>
-            
             {assessment.showDetails && (
               <div className="space-y-2 text-sm text-dark-muted mb-4">
                 <p>
@@ -86,8 +98,8 @@ const ViewAssessment = () => {
               </div>
             )}
             
-            <div className="result-score">{assessment.score}</div>
-            <div className={`result-category ${getCategoryClass()}`}>
+            <div className="text-4xl font-bold mb-2">{assessment.score}</div>
+            <div className={`text-xl font-medium ${getCategoryClass(assessment.category)}`}>
               {assessment.category}
             </div>
           </div>
@@ -128,6 +140,14 @@ const ViewAssessment = () => {
       </div>
     </div>
   );
+};
+
+const getCategoryClass = (category) => {
+  if (category === "Limited Wokeness") return "text-category-limited";
+  if (category === "Woke") return "text-category-woke";
+  if (category === "Very Woke") return "text-category-very";
+  if (category === "Egregiously Woke") return "text-category-egregiously";
+  return "";
 };
 
 export default ViewAssessment;

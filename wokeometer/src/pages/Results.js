@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { calculateScore, getWokenessCategory, saveAssessment } from '../data';
+import { calculateScore, getWokenessCategory } from '../data';
+import { saveAssessment } from '../lib/supabase-db';
 
 const Results = ({ currentAssessment, setCurrentAssessment }) => {
   const [score, setScore] = useState(0);
   const [category, setCategory] = useState('');
   const [isSaved, setIsSaved] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -26,17 +28,23 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
     return "";
   };
   
-  const handleSave = () => {
-    // Save the assessment
-    saveAssessment(
-      currentAssessment.showName,
-      currentAssessment.questions,
-      score,
-      category,
-      currentAssessment.showDetails
-    );
-    
-    setIsSaved(true);
+  const handleSave = async () => {
+    try {
+      setError(null);
+      // Save the assessment
+      await saveAssessment(
+        currentAssessment.showName,
+        currentAssessment.questions,
+        score,
+        category,
+        currentAssessment.showDetails
+      );
+      
+      setIsSaved(true);
+    } catch (err) {
+      setError('Failed to save assessment. Please try again.');
+      console.error('Error saving assessment:', err);
+    }
   };
   
   const handleNewAssessment = () => {
@@ -54,46 +62,18 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
   
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-3xl font-bold text-center mb-8">Assessment Results</h2>
-      
-      <div className="result-container">
-        <div className="flex gap-6 mb-6">
-          {currentAssessment.showDetails?.poster_path && (
-            <img
-              src={`https://image.tmdb.org/t/p/w342${currentAssessment.showDetails.poster_path}`}
-              alt={currentAssessment.showName}
-              className="w-48 h-72 object-cover rounded-lg shadow-lg"
-            />
-          )}
-          <div className="flex-1">
-            <h3 className="text-2xl font-bold mb-2">
-              {currentAssessment.showName}
-              {currentAssessment.showType && ` (${currentAssessment.showType})`}
-            </h3>
-            
-            {currentAssessment.showDetails && (
-              <div className="space-y-2 text-sm text-dark-muted mb-4">
-                <p>
-                  <span className="font-medium">Release Date:</span>{' '}
-                  {currentAssessment.showDetails.release_date || currentAssessment.showDetails.first_air_date || 'N/A'}
-                </p>
-                <p>
-                  <span className="font-medium">Rating:</span>{' '}
-                  {currentAssessment.showDetails.vote_average ? `${currentAssessment.showDetails.vote_average.toFixed(1)}/10` : 'N/A'}
-                </p>
-                {currentAssessment.showDetails.overview && (
-                  <p className="line-clamp-3">
-                    <span className="font-medium">Overview:</span>{' '}
-                    {currentAssessment.showDetails.overview}
-                  </p>
-                )}
-              </div>
-            )}
-            
-            <div className="result-score">{score}</div>
-            <div className={`result-category ${getCategoryClass()}`}>
-              {category || "No category"}
-            </div>
+      <div className="card">
+        <h2 className="text-3xl font-bold text-center mb-8">
+          Results for: <span className="text-primary">{currentAssessment.showName}</span>
+          {currentAssessment.showType && ` (${currentAssessment.showType})`}
+        </h2>
+        
+        <div className="text-center mb-8">
+          <div className={`text-5xl font-bold mb-2 ${getCategoryClass()}`}>
+            {score.toFixed(1)}
+          </div>
+          <div className={`text-2xl font-medium ${getCategoryClass()}`}>
+            {category}
           </div>
         </div>
         
@@ -108,6 +88,11 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               Assessment saved!
+            </div>
+          )}
+          {error && (
+            <div className="text-red-500 font-medium">
+              {error}
             </div>
           )}
         </div>

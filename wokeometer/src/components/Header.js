@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaSun, FaMoon, FaBars, FaTimes } from 'react-icons/fa';
+import { FaSun, FaMoon, FaBars, FaTimes, FaUser, FaSignOutAlt } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const Header = () => {
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
 
   const isActive = (path) => {
     return location.pathname === path;
@@ -18,6 +21,67 @@ const Header = () => {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const toggleProfileMenu = () => {
+    setIsProfileMenuOpen(!isProfileMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout({
+      logoutParams: {
+        returnTo: `${window.location.origin}/login`
+      }
+    });
+  };
+
+  const AuthButton = () => {
+    if (isAuthenticated) {
+      return (
+        <div className="relative">
+          <button
+            onClick={toggleProfileMenu}
+            className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-card-hover transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+              {user?.picture ? (
+                <img 
+                  src={user.picture} 
+                  alt={user.name} 
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <FaUser className="w-5 h-5" />
+              )}
+            </div>
+          </button>
+          
+          {isProfileMenuOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-light-card dark:bg-dark-card rounded-lg shadow-lg border border-light-border dark:border-dark-border py-2 z-50">
+              <div className="px-4 py-2 border-b border-light-border dark:border-dark-border">
+                <p className="text-sm font-medium text-light-text dark:text-dark-text">{user?.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100/80 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors cursor-pointer"
+              >
+                <FaSignOutAlt className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+    return (
+      <button
+        onClick={() => loginWithRedirect()}
+        className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors"
+      >
+        Login
+      </button>
+    );
   };
 
   return (
@@ -69,6 +133,7 @@ const Header = () => {
                 </li>
               </ul>
             </nav>
+            <AuthButton />
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-light-border dark:border-dark-border transition-colors"
@@ -84,6 +149,7 @@ const Header = () => {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-4">
+            <AuthButton />
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-light-border dark:border-dark-border transition-colors"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadAssessments, deleteAssessment, exportAssessments, importAssessments } from '../data';
+import { loadAssessments, deleteAssessment } from '../lib/supabase-db';
 import Modal from '../components/Modal';
 
 const SavedAssessments = () => {
@@ -11,17 +11,30 @@ const SavedAssessments = () => {
     assessmentId: null,
     showName: ''
   });
-  const [importError, setImportError] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Load saved assessments
-    const savedAssessments = loadAssessments();
-    setAssessments(savedAssessments);
+    loadSavedAssessments();
   }, []);
   
+  const loadSavedAssessments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const savedAssessments = await loadAssessments();
+      setAssessments(savedAssessments);
+    } catch (err) {
+      setError('Failed to load assessments. Please try again.');
+      console.error('Error loading assessments:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const filteredAssessments = assessments.filter(assessment =>
-    assessment.showName.toLowerCase().includes(searchQuery.toLowerCase())
+    assessment.show_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   const getCategoryClass = (category) => {
@@ -50,10 +63,16 @@ const SavedAssessments = () => {
     });
   };
 
-  const handleDeleteConfirm = () => {
-    deleteAssessment(deleteModal.assessmentId);
-    setAssessments(loadAssessments()); // Reload assessments after deletion
-    setDeleteModal({ isOpen: false, assessmentId: null, showName: '' });
+  const handleDeleteConfirm = async () => {
+    try {
+      setError(null);
+      await deleteAssessment(deleteModal.assessmentId);
+      await loadSavedAssessments(); // Reload assessments after deletion
+      setDeleteModal({ isOpen: false, assessmentId: null, showName: '' });
+    } catch (err) {
+      setError('Failed to delete assessment. Please try again.');
+      console.error('Error deleting assessment:', err);
+    }
   };
 
   const handleDeleteCancel = () => {
@@ -65,27 +84,14 @@ const SavedAssessments = () => {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
   
-  const handleExport = () => {
-    exportAssessments();
-  };
-
-  const handleImport = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        importAssessments(e.target.result);
-        setAssessments(loadAssessments()); // Reload assessments after import
-        setImportError(null);
-      } catch (error) {
-        setImportError(error.message);
-      }
-    };
-    reader.readAsText(file);
-  };
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-xl">Loading assessments...</div>
+      </div>
+    );
+  }
+  
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
@@ -98,33 +104,12 @@ const SavedAssessments = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="form-input"
           />
-          <button
-            onClick={handleExport}
-            className="btn btn-secondary flex items-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-            Export
-          </button>
-          <label className="btn btn-secondary flex items-center gap-2 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
-            Import
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="hidden"
-            />
-          </label>
         </div>
       </div>
       
-      {importError && (
+      {error && (
         <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded-lg text-red-200">
-          Error importing assessments: {importError}
+          {error}
         </div>
       )}
       
@@ -146,38 +131,38 @@ const SavedAssessments = () => {
               className="bg-dark-card rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer border border-dark-border hover:border-dark-border-hover"
               onClick={() => handleViewAssessment(assessment.id)}
             >
-              <div className="space-y-4">
-                {assessment.showDetails?.poster_path && (
+              <div className="flex flex-col gap-4">
+                {assessment.show_details?.poster_path && (
                   <div className="flex justify-center mb-4">
                     <img
-                      src={`https://image.tmdb.org/t/p/w342${assessment.showDetails.poster_path}`}
-                      alt={assessment.showName}
+                      src={`https://image.tmdb.org/t/p/w342${assessment.show_details.poster_path}`}
+                      alt={assessment.show_name}
                       className="w-32 h-48 object-cover rounded-lg shadow-md"
                     />
                   </div>
                 )}
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-xl font-bold text-white truncate">{assessment.showName}</h3>
+                  <h3 className="text-xl font-bold text-white truncate">{assessment.show_name}</h3>
                   <span className={`font-medium ${getCategoryClass(assessment.category)} text-lg`}>
                     {assessment.score} ({assessment.category})
                   </span>
                 </div>
-                {assessment.showDetails && (
+                {assessment.show_details && (
                   <div className="text-sm text-dark-muted space-y-1">
                     <p>
                       <span className="font-medium">Release Date:</span>{' '}
-                      {assessment.showDetails.release_date || assessment.showDetails.first_air_date || 'N/A'}
+                      {assessment.show_details.release_date || assessment.show_details.first_air_date || 'N/A'}
                     </p>
                     <p>
                       <span className="font-medium">Rating:</span>{' '}
-                      {assessment.showDetails.vote_average ? `${assessment.showDetails.vote_average.toFixed(1)}/10` : 'N/A'}
+                      {assessment.show_details.vote_average ? `${assessment.show_details.vote_average.toFixed(1)}/10` : 'N/A'}
                     </p>
                   </div>
                 )}
                 <div className="text-sm text-dark-muted">
                   {formatDate(assessment.date)}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-4">
                   <button
                     onClick={(e) => handleEditAssessment(e, assessment.id)}
                     className="flex-1 btn btn-secondary btn-sm flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
@@ -188,7 +173,7 @@ const SavedAssessments = () => {
                     Edit
                   </button>
                   <button
-                    onClick={(e) => handleDeleteClick(e, assessment.id, assessment.showName)}
+                    onClick={(e) => handleDeleteClick(e, assessment.id, assessment.show_name)}
                     className="flex-1 btn btn-danger btn-sm flex items-center justify-center gap-2 hover:bg-red-700 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

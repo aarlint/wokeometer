@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAssessment, updateAssessment, calculateScore, getWokenessCategory } from '../data';
+import { getAssessment, updateAssessment } from '../lib/supabase-db';
+import { calculateScore, getWokenessCategory } from '../data';
 import AssessmentWizard from './AssessmentWizard';
 
 const EditAssessment = () => {
@@ -8,42 +9,72 @@ const EditAssessment = () => {
   const navigate = useNavigate();
   const [currentAssessment, setCurrentAssessment] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const assessment = getAssessment(parseInt(id));
-    if (!assessment) {
-      setError('Assessment not found');
-      return;
-    }
-
-    // Prepare the assessment for the wizard - show all questions at once
-    const wizardAssessment = {
-      ...assessment,
-      questionsPerPage: assessment.questions.length, // Show all questions at once
-      currentPage: 1,
-      totalPages: 1 // Only one page since we're showing all questions
-    };
-
-    setCurrentAssessment(wizardAssessment);
+    loadAssessment();
   }, [id]);
 
-  const handleFinish = () => {
+  const loadAssessment = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const assessment = await getAssessment(parseInt(id));
+      if (!assessment) {
+        setError('Assessment not found');
+        return;
+      }
+
+      // Prepare the assessment for the wizard - show all questions at once
+      const wizardAssessment = {
+        ...assessment,
+        showName: assessment.show_name,
+        showDetails: assessment.show_details,
+        questionsPerPage: assessment.questions.length, // Show all questions at once
+        currentPage: 1,
+        totalPages: 1 // Only one page since we're showing all questions
+      };
+
+      setCurrentAssessment(wizardAssessment);
+    } catch (err) {
+      setError('Failed to load assessment. Please try again.');
+      console.error('Error loading assessment:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinish = async () => {
     if (!currentAssessment) return;
 
-    const score = calculateScore(currentAssessment.questions);
-    const category = getWokenessCategory(score);
+    try {
+      setError(null);
+      const score = calculateScore(currentAssessment.questions);
+      const category = getWokenessCategory(score);
 
-    updateAssessment(
-      currentAssessment.id,
-      currentAssessment.showName,
-      currentAssessment.questions,
-      score,
-      category,
-      currentAssessment.showDetails
-    );
+      await updateAssessment(
+        currentAssessment.id,
+        currentAssessment.showName,
+        currentAssessment.questions,
+        score,
+        category,
+        currentAssessment.showDetails
+      );
 
-    navigate('/saved');
+      navigate('/saved');
+    } catch (err) {
+      setError('Failed to update assessment. Please try again.');
+      console.error('Error updating assessment:', err);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-xl">Loading assessment...</div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -56,21 +87,6 @@ const EditAssessment = () => {
         >
           Back to Saved Assessments
         </button>
-      </div>
-    );
-  }
-
-  if (!currentAssessment) {
-    return (
-      <div className="max-w-2xl mx-auto card">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-700 rounded w-1/4 mb-4"></div>
-          <div className="space-y-4">
-            <div className="h-4 bg-gray-700 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-700 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-700 rounded w-2/3"></div>
-          </div>
-        </div>
       </div>
     );
   }
