@@ -1,64 +1,117 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadAssessments, deleteAssessment } from '../lib/supabase-db';
+import { supabase } from '../lib/supabase';
+import { loadAssessmentsForShow, getAverageScoreForShow, deleteAssessment, useCurrentUserId } from '../lib/supabase-db';
+import { getWokenessCategory } from '../data';
 import Modal from '../components/Modal';
+import AssessmentSummary from '../components/AssessmentSummary';
+import { FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaEye } from 'react-icons/fa';
 
 const SavedAssessments = () => {
   const [assessments, setAssessments] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('showName');
+  const [sortAscending, setSortAscending] = useState(true);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     assessmentId: null,
     showName: ''
   });
+  const [summaryShow, setSummaryShow] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const userId = useCurrentUserId();
   
   useEffect(() => {
-    loadSavedAssessments();
+    loadCatalog();
   }, []);
   
-  const loadSavedAssessments = async () => {
+  const loadCatalog = async () => {
     try {
       setLoading(true);
       setError(null);
-      const savedAssessments = await loadAssessments();
-      setAssessments(savedAssessments);
+      
+      // Get all assessments
+      const { data: allAssessments, error: assessmentsError } = await supabase
+        .from('assessments')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (assessmentsError) throw assessmentsError;
+      
+      // Get unique show names
+      const uniqueShows = [...new Set(allAssessments.map(a => a.show_name))];
+      
+      // For each unique show, get all assessments and calculate average score
+      const catalog = await Promise.all(
+        uniqueShows.map(async (showName) => {
+          const showAssessments = await loadAssessmentsForShow(showName);
+          const averageScore = await getAverageScoreForShow(showName);
+          
+          return {
+            showName,
+            assessments: showAssessments,
+            averageScore,
+            totalAssessments: showAssessments.length,
+            userAssessment: showAssessments.find(a => a.user_id === userId)
+          };
+        })
+      );
+      
+      setAssessments(catalog);
     } catch (err) {
-      setError('Failed to load assessments. Please try again.');
-      console.error('Error loading assessments:', err);
+      setError('Failed to load catalog. Please try again.');
+      console.error('Error loading catalog:', err);
     } finally {
       setLoading(false);
     }
   };
   
-  const filteredAssessments = assessments.filter(assessment =>
-    assessment.show_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAssessments = assessments
+    .filter(item =>
+      item.showName.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      const multiplier = sortAscending ? 1 : -1;
+      switch (sortBy) {
+        case 'showName':
+          return multiplier * a.showName.localeCompare(b.showName);
+        case 'score':
+          return multiplier * (b.averageScore - a.averageScore);
+        case 'assessments':
+          return multiplier * (b.totalAssessments - a.totalAssessments);
+        default:
+          return 0;
+      }
+    });
   
-  const getCategoryClass = (category) => {
-    if (category === "Limited Wokeness") return "text-category-limited";
-    if (category === "Woke") return "text-category-woke";
-    if (category === "Very Woke") return "text-category-very";
-    if (category === "Egregiously Woke") return "text-category-egregiously font-bold";
+  const getCategoryClass = (score) => {
+    if (score === 0) return "text-category-limited";
+    if (score > 0 && score <= 30) return "text-category-limited";
+    if (score > 30 && score <= 60) return "text-category-woke";
+    if (score > 60 && score <= 120) return "text-category-very";
+    if (score > 120) return "text-category-egregiously";
     return "";
   };
   
-  const handleViewAssessment = (id) => {
-    navigate(`/view/${id}`);
+  const handleViewSummary = (show) => {
+    setSummaryShow(show);
   };
 
-  const handleEditAssessment = (e, id) => {
-    e.stopPropagation(); // Prevent triggering the card's onClick
-    navigate(`/edit/${id}`);
+  const handleCloseSummary = () => {
+    setSummaryShow(null);
   };
 
-  const handleDeleteClick = (e, id, showName) => {
-    e.stopPropagation(); // Prevent triggering the card's onClick
+  const handleViewAssessment = (assessmentId) => {
+    navigate(`/view/${assessmentId}`);
+  };
+
+  const handleDeleteClick = (e, assessmentId, showName) => {
+    e.stopPropagation();
     setDeleteModal({
       isOpen: true,
-      assessmentId: id,
+      assessmentId,
       showName
     });
   };
@@ -66,8 +119,8 @@ const SavedAssessments = () => {
   const handleDeleteConfirm = async () => {
     try {
       setError(null);
-      await deleteAssessment(deleteModal.assessmentId);
-      await loadSavedAssessments(); // Reload assessments after deletion
+      await deleteAssessment(userId, deleteModal.assessmentId);
+      await loadCatalog(); // Reload catalog after deletion
       setDeleteModal({ isOpen: false, assessmentId: null, showName: '' });
     } catch (err) {
       setError('Failed to delete assessment. Please try again.');
@@ -79,15 +132,10 @@ const SavedAssessments = () => {
     setDeleteModal({ isOpen: false, assessmentId: null, showName: '' });
   };
   
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
-  
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl">Loading assessments...</div>
+        <div className="text-xl">Loading catalog...</div>
       </div>
     );
   }
@@ -108,11 +156,29 @@ const SavedAssessments = () => {
       </div>
 
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold">All Assessments</h2>
-        <div className="flex gap-4">
+        <h2 className="text-3xl font-bold">Media Catalog</h2>
+        <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="form-select"
+            >
+              <option value="showName">Sort by Show Name</option>
+              <option value="score">Sort by Score</option>
+              <option value="assessments">Sort by Number of Assessments</option>
+            </select>
+            <button
+              onClick={() => setSortAscending(!sortAscending)}
+              className="p-2 hover:bg-dark-card-hover rounded-lg transition-colors"
+              title={sortAscending ? "Sort Descending" : "Sort Ascending"}
+            >
+              {sortAscending ? <FaSortUp className="w-5 h-5" /> : <FaSortDown className="w-5 h-5" />}
+            </button>
+          </div>
           <input
             type="text"
-            placeholder="Search assessments..."
+            placeholder="Search Media..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="form-input"
@@ -125,75 +191,100 @@ const SavedAssessments = () => {
           {error}
         </div>
       )}
-      
+
       {filteredAssessments.length === 0 ? (
-        <div className="text-center card">
-          <p className="text-dark-muted mb-6">No saved assessments found.</p>
-          <button 
-            onClick={() => navigate('/new')} 
-            className="btn btn-primary"
-          >
-            Create New Assessment
-          </button>
+        <div className="text-center py-12">
+          <p className="text-xl text-dark-muted">No shows found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
-          {filteredAssessments.map((assessment) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredAssessments.map((item) => (
             <div 
-              key={assessment.id} 
-              className="bg-dark-card rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer border border-dark-border hover:border-dark-border-hover"
-              onClick={() => handleViewAssessment(assessment.id)}
+              key={item.showName}
+              className="card cursor-pointer hover:bg-dark-card-hover transition-colors relative"
             >
-              <div className="flex flex-col gap-4">
-                {assessment.show_details?.poster_path && (
-                  <div className="flex justify-center mb-4">
+              {item.userAssessment && (
+                <div className="absolute top-0 right-0 bg-primary text-white px-3 py-1 rounded-bl-lg text-sm font-medium">
+                  Your Assessment
+                </div>
+              )}
+              <div 
+                className="p-6"
+                onClick={() => handleViewSummary(item)}
+              >
+                <div className="flex gap-6">
+                  {item.userAssessment?.show_details?.poster_path && (
                     <img
-                      src={`https://image.tmdb.org/t/p/w342${assessment.show_details.poster_path}`}
-                      alt={assessment.show_name}
-                      className="w-32 h-48 object-cover rounded-lg shadow-md"
+                      src={`https://image.tmdb.org/t/p/w342${item.userAssessment.show_details.poster_path}`}
+                      alt={item.showName}
+                      className="w-32 h-48 object-cover rounded-lg shadow-lg"
                     />
-                  </div>
-                )}
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-xl font-bold text-white truncate">{assessment.show_name}</h3>
-                  <span className={`font-medium ${getCategoryClass(assessment.category)} text-lg`}>
-                    {assessment.score} ({assessment.category})
-                  </span>
-                </div>
-                {assessment.show_details && (
-                  <div className="text-sm text-dark-muted space-y-1">
-                    <p>
-                      <span className="font-medium">Release Date:</span>{' '}
-                      {assessment.show_details.release_date || assessment.show_details.first_air_date || 'N/A'}
+                  )}
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold mb-2">{item.showName}</h3>
+                    
+                    {item.userAssessment?.show_details && (
+                      <div className="space-y-1 text-sm text-dark-muted mb-4">
+                        <p>
+                          <span className="font-medium">Release Date:</span>{' '}
+                          {item.userAssessment.show_details.release_date || item.userAssessment.show_details.first_air_date || 'N/A'}
+                        </p>
+                        <p>
+                          <span className="font-medium">Rating:</span>{' '}
+                          {item.userAssessment.show_details.vote_average ? `${item.userAssessment.show_details.vote_average.toFixed(1)}/10` : 'N/A'}
+                        </p>
+                        {item.userAssessment.show_details.overview && (
+                          <p className="line-clamp-2">
+                            <span className="font-medium">Overview:</span>{' '}
+                            {item.userAssessment.show_details.overview}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="mb-4">
+                      <p className="text-2xl font-bold mb-1">Score: {item.averageScore}</p>
+                      <p className={`text-lg ${getCategoryClass(item.averageScore)}`}>
+                        {getWokenessCategory(item.averageScore)}
+                      </p>
+                    </div>
+                    
+                    <p className="text-dark-muted">
+                      {item.totalAssessments} assessment{item.totalAssessments !== 1 ? 's' : ''}
                     </p>
-                    <p>
-                      <span className="font-medium">Rating:</span>{' '}
-                      {assessment.show_details.vote_average ? `${assessment.show_details.vote_average.toFixed(1)}/10` : 'N/A'}
-                    </p>
+
+                    {item.userAssessment && (
+                      <div className="mt-4 flex justify-between items-center gap-3">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewAssessment(item.userAssessment.id);
+                          }}
+                          className="btn btn-primary flex-1 flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors"
+                        >
+                          <FaEye className="w-4 h-4" />
+                          <span>View</span>
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/edit/${item.userAssessment.id}`);
+                          }}
+                          className="btn btn-secondary flex-1 flex items-center justify-center gap-2 hover:bg-secondary-hover transition-colors"
+                        >
+                          <FaEdit className="w-4 h-4" />
+                          <span>Edit</span>
+                        </button>
+                        <button 
+                          onClick={(e) => handleDeleteClick(e, item.userAssessment.id, item.showName)}
+                          className="btn btn-danger flex-1 flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
+                        >
+                          <FaTrash className="w-4 h-4" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-                <div className="text-sm text-dark-muted">
-                  {formatDate(assessment.date)}
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={(e) => handleEditAssessment(e, assessment.id)}
-                    className="flex-1 btn btn-secondary btn-sm flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                    Edit
-                  </button>
-                  <button
-                    onClick={(e) => handleDeleteClick(e, assessment.id, assessment.show_name)}
-                    className="flex-1 btn btn-danger btn-sm flex items-center justify-center gap-2 hover:bg-red-700 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    Delete
-                  </button>
                 </div>
               </div>
             </div>
@@ -201,6 +292,11 @@ const SavedAssessments = () => {
         </div>
       )}
 
+      <AssessmentSummary
+        show={summaryShow}
+        onClose={handleCloseSummary}
+      />
+      
       <Modal
         isOpen={deleteModal.isOpen}
         onClose={handleDeleteCancel}

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAssessment, updateAssessment } from '../lib/supabase-db';
+import { getAssessment, updateAssessment, useCurrentUserId } from '../lib/supabase-db';
 import { calculateScore, getWokenessCategory } from '../data';
 import AssessmentWizard from './AssessmentWizard';
 
 const EditAssessment = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const userId = useCurrentUserId();
   const [currentAssessment, setCurrentAssessment] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +23,12 @@ const EditAssessment = () => {
       const assessment = await getAssessment(parseInt(id));
       if (!assessment) {
         setError('Assessment not found');
+        return;
+      }
+
+      // Check if the user owns this assessment
+      if (assessment.user_id !== userId) {
+        setError('You do not have permission to edit this assessment');
         return;
       }
 
@@ -45,23 +52,22 @@ const EditAssessment = () => {
   };
 
   const handleFinish = async () => {
-    if (!currentAssessment) return;
-
     try {
       setError(null);
       const score = calculateScore(currentAssessment.questions);
       const category = getWokenessCategory(score);
-
+      
       await updateAssessment(
-        currentAssessment.id,
+        userId,
+        parseInt(id),
         currentAssessment.showName,
         currentAssessment.questions,
         score,
         category,
         currentAssessment.showDetails
       );
-
-      navigate('/saved');
+      
+      navigate(`/view/${id}`);
     } catch (err) {
       setError('Failed to update assessment. Please try again.');
       console.error('Error updating assessment:', err);
@@ -82,7 +88,7 @@ const EditAssessment = () => {
         <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
         <p className="text-dark-muted mb-6">{error}</p>
         <button 
-          onClick={() => navigate('/saved')} 
+          onClick={() => navigate('/')} 
           className="btn btn-primary"
         >
           Back to Saved Assessments

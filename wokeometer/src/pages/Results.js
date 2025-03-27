@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { calculateScore, getWokenessCategory } from '../data';
-import { saveAssessment } from '../lib/supabase-db';
+import { saveAssessment, useCurrentUserId } from '../lib/supabase-db';
 
 const Results = ({ currentAssessment, setCurrentAssessment }) => {
   const [score, setScore] = useState(0);
@@ -9,6 +9,7 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
   const [isSaved, setIsSaved] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const userId = useCurrentUserId();
   
   useEffect(() => {
     // Calculate the score
@@ -33,6 +34,7 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
       setError(null);
       // Save the assessment
       await saveAssessment(
+        userId,
         currentAssessment.showName,
         currentAssessment.questions,
         score,
@@ -56,63 +58,98 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
   };
   
   const handleViewSaved = () => {
-    // Navigate to the saved assessments page
-    navigate('/saved');
+    // Navigate to the home catalog
+    navigate('/');
   };
   
   return (
     <div className="max-w-2xl mx-auto">
       <div className="card">
         <h2 className="text-3xl font-bold text-center mb-8">
-          Results for: <span className="text-primary">{currentAssessment.showName}</span>
+          Assessment Results for: <span className="text-primary">{currentAssessment.showName}</span>
           {currentAssessment.showType && ` (${currentAssessment.showType})`}
         </h2>
         
-        <div className="text-center mb-8">
-          <div className={`text-5xl font-bold mb-2 ${getCategoryClass()}`}>
-            {score.toFixed(1)}
-          </div>
-          <div className={`text-2xl font-medium ${getCategoryClass()}`}>
-            {category}
+        <div className="flex gap-6 mb-8">
+          {currentAssessment.showDetails?.poster_path && (
+            <img
+              src={`https://image.tmdb.org/t/p/w342${currentAssessment.showDetails.poster_path}`}
+              alt={currentAssessment.showName}
+              className="w-48 h-72 object-cover rounded-lg shadow-lg"
+            />
+          )}
+          <div className="flex-1">
+            {currentAssessment.showDetails && (
+              <div className="space-y-2 text-sm text-dark-muted mb-4">
+                <p>
+                  <span className="font-medium">Release Date:</span>{' '}
+                  {currentAssessment.showDetails.release_date || currentAssessment.showDetails.first_air_date || 'N/A'}
+                </p>
+                <p>
+                  <span className="font-medium">Rating:</span>{' '}
+                  {currentAssessment.showDetails.vote_average ? `${currentAssessment.showDetails.vote_average.toFixed(1)}/10` : 'N/A'}
+                </p>
+                {currentAssessment.showDetails.overview && (
+                  <p className="line-clamp-3">
+                    <span className="font-medium">Overview:</span>{' '}
+                    {currentAssessment.showDetails.overview}
+                  </p>
+                )}
+              </div>
+            )}
+            
+            <div className="text-4xl font-bold mb-2">{score}</div>
+            <div className={`text-xl font-medium ${getCategoryClass()}`}>
+              {category}
+            </div>
           </div>
         </div>
         
-        <div className="flex justify-center gap-4 mb-6">
+        <div className="mt-8 neoglass p-6">
+          <h4 className="text-xl font-medium mb-6 text-primary">Assessment Questions</h4>
+          
+          <div className="text-left">
+            {currentAssessment.questions.map((question) => (
+              <div key={question.id} className="mb-4 pb-4 border-b border-glass-border">
+                <p className="font-medium mb-2">
+                  {question.text}
+                  <span className="ml-2 text-sm text-dark-muted">
+                    (Weight: {(question.weight * 100)}%)
+                  </span>
+                </p>
+                <p className={
+                  question.answer === "Agree" || question.answer === "Strongly Agree" 
+                  ? "text-category-very font-medium" 
+                  : "text-dark-muted"
+                }>
+                  Answer: {question.answer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="mt-8 flex gap-4">
           {!isSaved ? (
-            <button onClick={handleSave} className="btn btn-primary">
+            <button 
+              onClick={handleSave} 
+              className="btn btn-primary flex-1"
+            >
               Save Assessment
             </button>
           ) : (
-            <div className="text-category-limited font-medium flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              Assessment saved!
-            </div>
+            <button 
+              onClick={handleViewSaved} 
+              className="btn btn-primary flex-1"
+            >
+              View Saved Assessments
+            </button>
           )}
-          {error && (
-            <div className="text-red-500 font-medium">
-              {error}
-            </div>
-          )}
-        </div>
-        
-        <div className="mt-8 p-4 neoglass">
-          <h4 className="text-lg font-medium mb-4">What does this mean?</h4>
-          <p className="mb-4 text-dark-text">
-            {category === "Limited Wokeness" && "This content contains minimal woke elements and can be enjoyed without much concern for ideological messaging."}
-            {category === "Woke" && "This content contains noticeable woke elements and themes that may impact your viewing experience."}
-            {category === "Very Woke" && "This content contains significant woke messaging and themes that are central to the viewing experience."}
-            {category === "Egregiously Woke" && "This content is dominated by woke ideology and messaging, which is likely to be distracting or off-putting for viewers who don't share these views."}
-          </p>
-        </div>
-        
-        <div className="flex justify-center gap-6 mt-8">
-          <button onClick={handleNewAssessment} className="btn btn-secondary">
+          <button 
+            onClick={handleNewAssessment} 
+            className="btn btn-secondary flex-1"
+          >
             New Assessment
-          </button>
-          <button onClick={handleViewSaved} className="btn btn-secondary">
-            View Saved Assessments
           </button>
         </div>
       </div>
