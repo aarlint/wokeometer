@@ -46,7 +46,7 @@ const LoginPage = () => {
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-light-bg dark:bg-dark-bg">
       <div className="text-center p-12 bg-light-card dark:bg-dark-card rounded-lg shadow-xl max-w-md w-full mx-4">
         <h1 className="text-4xl font-bold mb-6 text-light-text dark:text-dark-text">Woke-O-Meter</h1>
-        <p className="mb-8 text-lg text-light-text dark:text-dark-text">Measure your social awareness</p>
+        <p className="mb-8 text-lg text-light-text dark:text-dark-text">Make Media Great Again! Rate garbage media!</p>
         <button
           onClick={() => loginWithRedirect()}
           className="w-full px-6 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-lg font-semibold"
@@ -82,11 +82,9 @@ function App() {
             <Route 
               path="/" 
               element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <SavedAssessments />
-                  </AppLayout>
-                </ProtectedRoute>
+                <AppLayout>
+                  <SavedAssessments />
+                </AppLayout>
               } 
             />
             <Route 

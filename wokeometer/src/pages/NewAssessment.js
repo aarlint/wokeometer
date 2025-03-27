@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { QUESTIONS } from '../data';
 import { FaFilm, FaTv, FaYoutube, FaBookOpen, FaEllipsisH, FaTimes } from 'react-icons/fa';
 
 const TMDB_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjNzczODJhOTg2NmQ0OGMwMzdmZmFjOTdlNmM3NTU2ZSIsIm5iZiI6MTc0MzAyMzIxNS43Nzc5OTk5LCJzdWIiOiI2N2U0NmM2ZjI1ODBlZWYxZTgwMDFlMWMiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.DO4reqvhxu89VrhoiCSHN026U7_0W9R0xEd0we5eupw';
 
 const NewAssessment = ({ setCurrentAssessment }) => {
-  const [showName, setShowName] = useState('');
+  const location = useLocation();
+  const [showName, setShowName] = useState(location.state?.showName || '');
   const [showType, setShowType] = useState('');
   const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
-  const [selectedShow, setSelectedShow] = useState(null);
+  const [selectedShow, setSelectedShow] = useState(location.state?.showDetails || null);
   const [isSearching, setIsSearching] = useState(false);
   const [isSelectingFromDropdown, setIsSelectingFromDropdown] = useState(false);
   const navigate = useNavigate();
@@ -23,12 +24,59 @@ const NewAssessment = ({ setCurrentAssessment }) => {
     { id: 'Other', icon: FaEllipsisH, label: 'Other' }
   ];
 
+  // If we have show details from state, set the show type
+  useEffect(() => {
+    if (location.state?.showDetails) {
+      const mediaType = location.state.showDetails.media_type;
+      if (mediaType === 'movie') {
+        setShowType('Movie');
+      } else if (mediaType === 'tv') {
+        setShowType('TV Show');
+      }
+    }
+  }, [location.state?.showDetails]);
+
+  // Search TMDB for show/movie
+  const searchTMDB = async (query) => {
+    setIsSearching(true);
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&include_adult=false`
+      );
+      const data = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        // Filter out adult content and sort by popularity
+        const filteredResults = data.results
+          .filter(result => !result.adult)
+          .sort((a, b) => b.popularity - a.popularity);
+        setSearchResults(filteredResults);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Error searching TMDB:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle show selection from search results
+  const handleShowSelect = (show) => {
+    setSelectedShow(show);
+    setShowName(show.title || show.name);
+    setShowType(show.media_type === 'movie' ? 'Movie' : 'TV Show');
+    setSearchResults([]);
+    setIsSelectingFromDropdown(false);
+  };
+
   // Debounced search function
   useEffect(() => {
     if (isSelectingFromDropdown) return;
     
     const searchTimeout = setTimeout(() => {
-      if (showName.trim()) {
+      if (showName.trim() && !selectedShow) {
         searchTMDB(showName.trim());
       } else {
         setSearchResults([]);
@@ -36,63 +84,14 @@ const NewAssessment = ({ setCurrentAssessment }) => {
     }, 500); // 500ms delay
 
     return () => clearTimeout(searchTimeout);
-  }, [showName, isSelectingFromDropdown]);
+  }, [showName, isSelectingFromDropdown, selectedShow]);
 
-  const searchTMDB = async (query) => {
-    setIsSearching(true);
-    try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(query)}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${TMDB_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      const data = await response.json();
-      setSearchResults(data.results);
-    } catch (error) {
-      console.error('Error searching TMDB:', error);
-    } finally {
-      setIsSearching(false);
+  // If we have a show name from state but no show details, search for it
+  useEffect(() => {
+    if (location.state?.showName && !location.state?.showDetails) {
+      searchTMDB(location.state.showName);
     }
-  };
-
-  const TypeSelector = () => (
-    <div className="flex flex-col">
-      <label className="text-light-text dark:text-dark-text font-medium mb-2">Type:</label>
-      <div className="grid grid-cols-5 gap-4">
-        {showTypes.map((type) => {
-          const Icon = type.icon;
-          return (
-            <button
-              key={type.id}
-              type="button"
-              onClick={() => setShowType(type.id)}
-              className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all ${
-                showType === type.id
-                  ? 'bg-primary text-white shadow-lg scale-105'
-                  : 'bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-light-border dark:border-dark-border'
-              }`}
-            >
-              <Icon className="text-2xl mb-2 text-light-text dark:text-dark-text" />
-              <span className="text-sm text-light-text dark:text-dark-text">{type.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-
-  const handleShowSelect = (result) => {
-    setIsSelectingFromDropdown(true);
-    setShowName(result.title || result.name);
-    setSelectedShow(result);
-    setSearchResults([]);
-    setShowType(result.media_type === 'tv' ? 'TV Show' : 'Movie');
-    setTimeout(() => setIsSelectingFromDropdown(false), 100);
-  };
+  }, [location.state?.showName, location.state?.showDetails]);
 
   const handleInputChange = (e) => {
     setIsSelectingFromDropdown(false);
@@ -133,6 +132,32 @@ const NewAssessment = ({ setCurrentAssessment }) => {
     setCurrentAssessment(newAssessment);
     navigate('/assessment');
   };
+
+  const TypeSelector = () => (
+    <div className="flex flex-col">
+      <label className="text-light-text dark:text-dark-text font-medium mb-2">Type:</label>
+      <div className="grid grid-cols-5 gap-4">
+        {showTypes.map((type) => {
+          const Icon = type.icon;
+          return (
+            <button
+              key={type.id}
+              type="button"
+              onClick={() => setShowType(type.id)}
+              className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all ${
+                showType === type.id
+                  ? 'bg-primary text-white shadow-lg scale-105'
+                  : 'bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-light-border dark:border-dark-border'
+              }`}
+            >
+              <Icon className="text-2xl mb-2 text-light-text dark:text-dark-text" />
+              <span className="text-sm text-light-text dark:text-dark-text">{type.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
   
   return (
     <div>

@@ -60,7 +60,7 @@ const SavedAssessments = () => {
             assessments: showAssessments,
             averageScore,
             totalAssessments: showAssessments.length,
-            userAssessment: showAssessments.find(a => a.user_id === userId)
+            userAssessment: userId ? showAssessments.find(a => a.user_id === userId) : null
           };
         })
       );
@@ -169,6 +169,10 @@ const SavedAssessments = () => {
 
   const handleViewComments = (e, showName) => {
     e.stopPropagation();
+    if (!userId) {
+      navigate('/login', { state: { redirectTo: '/saved' } });
+      return;
+    }
     setCommentsPanel({
       isOpen: true,
       showName
@@ -184,6 +188,10 @@ const SavedAssessments = () => {
 
   const handleDeleteClick = (e, assessmentId, showName) => {
     e.stopPropagation();
+    if (!userId) {
+      navigate('/login', { state: { redirectTo: '/saved' } });
+      return;
+    }
     setDeleteModal({
       isOpen: true,
       assessmentId,
@@ -222,12 +230,21 @@ const SavedAssessments = () => {
         <p className="text-gray-600 dark:text-dark-muted mb-6">
           The only media content assessment you'll ever need.
         </p>
-        <button 
-          onClick={() => navigate('/new')} 
-          className="btn btn-primary text-lg px-8 py-3"
-        >
-          Start New Assessment
-        </button>
+        {userId ? (
+          <button 
+            onClick={() => navigate('/new')} 
+            className="btn btn-primary text-lg px-8 py-3"
+          >
+            Start New Assessment
+          </button>
+        ) : (
+          <button 
+            onClick={() => navigate('/login', { state: { redirectTo: '/saved' } })} 
+            className="btn btn-primary text-lg px-8 py-3"
+          >
+            Login to Start Assessing
+          </button>
+        )}
       </div>
 
       <div className="flex justify-between items-center mb-8">
@@ -406,11 +423,20 @@ const SavedAssessments = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate('/new', { state: { showName: item.showName } });
+                          if (!userId) {
+                            navigate('/login', { state: { redirectTo: '/saved' } });
+                            return;
+                          }
+                          navigate('/new', { 
+                            state: { 
+                              showName: item.showName,
+                              showDetails: item.assessments[0]?.show_details || null
+                            } 
+                          });
                         }}
                         className="btn btn-primary w-full"
                       >
-                        Assess Now
+                        {userId ? 'Assess Now' : 'Login to Assess'}
                       </button>
                     )}
                   </div>
@@ -535,11 +561,20 @@ const SavedAssessments = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate('/new', { state: { showName: item.showName } });
+                            if (!userId) {
+                              navigate('/login', { state: { redirectTo: '/saved' } });
+                              return;
+                            }
+                            navigate('/new', { 
+                              state: { 
+                                showName: item.showName,
+                                showDetails: item.assessments[0]?.show_details || null
+                              } 
+                            });
                           }}
                           className="btn btn-primary text-sm"
                         >
-                          Assess
+                          {userId ? 'Assess' : 'Login to Assess'}
                         </button>
                       )}
                     </div>
