@@ -92,18 +92,10 @@ const SavedAssessments = () => {
       }
     });
   
-  const getCategoryClass = (score) => {
-    if (score === 0) return "text-category-limited";
-    if (score > 0 && score <= 30) return "text-category-limited";
-    if (score > 30 && score <= 60) return "text-category-woke";
-    if (score > 60 && score <= 120) return "text-category-very";
-    if (score > 120) return "text-category-egregiously";
-    return "";
-  };
-
   const getTopWokeThings = (assessments) => {
     const questionScores = {};
     const questionCounts = {};
+    const questionCategories = {};
 
     // Initialize question tracking
     assessments.forEach(assessment => {
@@ -111,6 +103,7 @@ const SavedAssessments = () => {
         if (!questionScores[q.text]) {
           questionScores[q.text] = 0;
           questionCounts[q.text] = 0;
+          questionCategories[q.text] = q.category;
         }
       });
     });
@@ -139,7 +132,9 @@ const SavedAssessments = () => {
     // Calculate averages and sort
     const questionAverages = Object.entries(questionScores).map(([text, score]) => ({
       text,
-      average: score / questionCounts[text]
+      category: questionCategories[text],
+      average: score / questionCounts[text],
+      totalResponses: questionCounts[text]
     }));
 
     // Sort by average score and get top 3, filtering out zero scores
@@ -147,6 +142,15 @@ const SavedAssessments = () => {
       .filter(q => q.average > 0)
       .sort((a, b) => b.average - a.average)
       .slice(0, 3);
+  };
+
+  const getCategoryClass = (score) => {
+    if (score === 0) return "text-category-based";
+    if (score > 0 && score <= 20) return "text-category-limited";
+    if (score > 20 && score <= 40) return "text-category-woke";
+    if (score > 40 && score <= 60) return "text-category-very";
+    if (score > 60) return "text-category-egregiously";
+    return "";
   };
 
   const getScoreColorClass = (score) => {
@@ -404,10 +408,20 @@ const SavedAssessments = () => {
                           <div className="space-y-2">
                             {getTopWokeThings(item.assessments).map((thing, index) => (
                               <div key={index} className="flex items-center justify-between text-sm">
-                                <span className="text-gray-600 dark:text-dark-muted">{thing.text}</span>
-                                <span className={`font-medium ${getScoreColorClass(thing.average)}`}>
-                                  {thing.average.toFixed(1)}
-                                </span>
+                                <div>
+                                  <span className="text-gray-600 dark:text-dark-muted">{thing.text}</span>
+                                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                                    ({thing.category})
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-medium ${getScoreColorClass(thing.average)}`}>
+                                    {thing.average.toFixed(1)}
+                                  </span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    ({thing.totalResponses} responses)
+                                  </span>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -415,9 +429,16 @@ const SavedAssessments = () => {
                       )}
                     </div>
                     
-                    <p className="text-gray-600 dark:text-dark-muted mb-4">
-                      {item.totalAssessments} assessment{item.totalAssessments !== 1 ? 's' : ''}
-                    </p>
+                    <div className="mb-4">
+                      <div className="text-sm text-gray-600 dark:text-dark-muted">
+                        {item.totalAssessments} assessment{item.totalAssessments !== 1 ? 's' : ''}
+                      </div>
+                      {item.assessments[0]?.questions && (
+                        <div className="text-sm text-gray-600 dark:text-dark-muted">
+                          {item.assessments[0].questions.filter(q => q.answer && q.answer !== "" && q.answer !== "N/A").length} answered questions
+                        </div>
+                      )}
+                    </div>
 
                     {!item.userAssessment && (
                       <button
@@ -487,6 +508,11 @@ const SavedAssessments = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900 dark:text-dark-text">{item.averageScore}</div>
+                    {item.assessments[0]?.questions && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {item.assessments[0].questions.filter(q => q.answer && q.answer !== "" && q.answer !== "N/A").length} answered
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className={`text-sm ${getCategoryClass(item.averageScore)}`}>

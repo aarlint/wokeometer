@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { QUESTIONS } from '../data';
 import { FaFilm, FaTv, FaYoutube, FaBookOpen, FaEllipsisH, FaTimes } from 'react-icons/fa';
-
-const TMDB_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjNzczODJhOTg2NmQ0OGMwMzdmZmFjOTdlNmM3NTU2ZSIsIm5iZiI6MTc0MzAyMzIxNS43Nzc5OTk5LCJzdWIiOiI2N2U0NmM2ZjI1ODBlZWYxZTgwMDFlMWMiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.DO4reqvhxu89VrhoiCSHN026U7_0W9R0xEd0we5eupw';
+import { TMDB_API_KEY } from '../config/api';
 
 const NewAssessment = ({ setCurrentAssessment }) => {
   const location = useLocation();
   const [showName, setShowName] = useState(location.state?.showName || '');
   const [showType, setShowType] = useState('');
-  const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [selectedShow, setSelectedShow] = useState(location.state?.showDetails || null);
   const [isSearching, setIsSearching] = useState(false);
@@ -41,7 +39,13 @@ const NewAssessment = ({ setCurrentAssessment }) => {
     setIsSearching(true);
     try {
       const response = await fetch(
-        `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&include_adult=false`
+        `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(query)}&include_adult=false`,
+        {
+          headers: {
+            'Authorization': `Bearer ${TMDB_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
       const data = await response.json();
       
@@ -118,14 +122,11 @@ const NewAssessment = ({ setCurrentAssessment }) => {
       return;
     }
     
-    // Create new assessment object with additional show details
+    // Create new assessment object
     const newAssessment = {
       showName,
       showType,
-      questionsPerPage: showAllQuestions ? QUESTIONS.length : 1,
       questions: [...QUESTIONS],
-      currentPage: 1,
-      totalPages: showAllQuestions ? 1 : QUESTIONS.length,
       showDetails: selectedShow || null // Include selected show details
     };
     
@@ -263,34 +264,6 @@ const NewAssessment = ({ setCurrentAssessment }) => {
           )}
           
           <TypeSelector />
-          
-          <div className="flex flex-col mb-4">
-            <label className="text-light-text dark:text-dark-text font-medium mb-2">Questions Display:</label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => setShowAllQuestions(false)}
-                className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all ${
-                  !showAllQuestions
-                    ? 'bg-primary text-white shadow-lg scale-105'
-                    : 'bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-light-border dark:border-dark-border'
-                }`}
-              >
-                <span className="text-sm text-light-text dark:text-dark-text">One question at a time</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAllQuestions(true)}
-                className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all ${
-                  showAllQuestions
-                    ? 'bg-primary text-white shadow-lg scale-105'
-                    : 'bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-card-hover border border-light-border dark:border-dark-border'
-                }`}
-              >
-                <span className="text-sm text-light-text dark:text-dark-text">All questions at once</span>
-              </button>
-            </div>
-          </div>
           
           <button type="submit" className="btn btn-primary self-start">
             Start Assessment

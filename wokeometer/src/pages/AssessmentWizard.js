@@ -1,27 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ANSWER_OPTIONS, ANSWER_OPTIONS_LAYOUT, calculateScore, getWokenessCategory, saveAssessment } from '../data';
+import { ANSWER_OPTIONS, ANSWER_OPTIONS_LAYOUT, CATEGORIES, calculateScore, getWokenessCategory, saveAssessment } from '../data';
 
 const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish }) => {
-  const [currentPage, setCurrentPage] = useState(currentAssessment.currentPage);
+  const [currentCategory, setCurrentCategory] = useState(CATEGORIES[0]);
   const [hasAttemptedFinish, setHasAttemptedFinish] = useState(false);
   const navigate = useNavigate();
   
-  const questionsPerPage = currentAssessment.questionsPerPage;
-  const totalPages = currentAssessment.totalPages;
+  // Group questions by category
+  const questionsByCategory = currentAssessment.questions.reduce((acc, question) => {
+    if (!acc[question.category]) {
+      acc[question.category] = [];
+    }
+    acc[question.category].push(question);
+    return acc;
+  }, {});
   
-  // Calculate which questions to show on the current page
-  const startIndex = (currentPage - 1) * questionsPerPage;
-  const endIndex = Math.min(startIndex + questionsPerPage, currentAssessment.questions.length);
-  const currentQuestions = currentAssessment.questions.slice(startIndex, endIndex);
+  // Get current category's questions
+  const currentQuestions = questionsByCategory[currentCategory] || [];
   
-  // Update assessment when changing pages
+  // Update assessment when changing categories
   useEffect(() => {
     setCurrentAssessment({
       ...currentAssessment,
-      currentPage
+      currentCategory
     });
-  }, [currentPage]);
+  }, [currentCategory]);
 
   // Add keyboard shortcuts for answering questions
   useEffect(() => {
@@ -56,7 +60,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
           }
         }
       } else if (e.key === 'Enter' && canProceed()) {
-        // Enter key to proceed to next page
+        // Enter key to proceed to next category or finish
         handleNext();
       }
     };
@@ -80,10 +84,11 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
   };
   
   const handleNext = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+    const currentIndex = CATEGORIES.indexOf(currentCategory);
+    if (currentIndex < CATEGORIES.length - 1) {
+      setCurrentCategory(CATEGORIES[currentIndex + 1]);
     } else {
-      // If we're on the last page, check if we can proceed
+      // If we're on the last category, check if we can proceed
       if (!canProceed()) {
         setHasAttemptedFinish(true);
         return;
@@ -104,18 +109,23 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
   };
   
   const handlePrevious = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+    const currentIndex = CATEGORIES.indexOf(currentCategory);
+    if (currentIndex > 0) {
+      setCurrentCategory(CATEGORIES[currentIndex - 1]);
     }
   };
   
-  const canProceed = () => {
-    // Check if all questions across all pages have been answered
-    return currentAssessment.questions.every(q => q.answer !== "");
+  const getAnsweredCount = () => {
+    return currentAssessment.questions.filter(q => q.answer && q.answer !== "" && q.answer !== "N/A").length;
   };
 
   const getUnansweredCount = () => {
-    return currentAssessment.questions.filter(q => q.answer === "").length;
+    return currentAssessment.questions.filter(q => !q.answer || q.answer === "" || q.answer === "N/A").length;
+  };
+
+  const canProceed = () => {
+    // Check if at least one question has been answered with a non-N/A value
+    return currentAssessment.questions.some(q => q.answer && q.answer !== "" && q.answer !== "N/A");
   };
 
   // Handle clicking on the entire label
@@ -130,30 +140,40 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
         {currentAssessment.showType && ` (${currentAssessment.showType})`}
       </h2>
       
+      {/* Category Tabs */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        {CATEGORIES.map((category) => (
+          <button
+            key={category}
+            onClick={() => setCurrentCategory(category)}
+            className={`px-4 py-2 rounded-lg whitespace-nowrap ${
+              currentCategory === category
+                ? 'bg-primary text-white'
+                : 'bg-white dark:bg-dark-card text-gray-700 dark:text-dark-text hover:bg-gray-50 dark:hover:bg-dark-card-hover'
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+      
       <div className="card bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border">
-        {totalPages > 1 && (
-          <div className="mb-6 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text">
-              Page {currentPage} of {totalPages}
-            </h3>
-            <div className="text-sm text-gray-600 dark:text-dark-muted">
-              Showing questions {startIndex + 1} - {endIndex} of {currentAssessment.questions.length}
-            </div>
+        <div className="mb-6 flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text">
+            {currentCategory}
+          </h3>
+          <div className="text-sm text-gray-600 dark:text-dark-muted">
+            Showing {currentQuestions.length} questions
           </div>
-        )}
+        </div>
         
         {currentQuestions.map((question) => (
-          <div key={question.id} className={`question border-b border-gray-200 dark:border-dark-border pb-4 mb-4 ${hasAttemptedFinish && !question.answer ? 'bg-red-50 dark:bg-red-900/20' : ''}`}>
+          <div key={question.id} className={`question border-b border-gray-200 dark:border-dark-border pb-4 mb-4`}>
             <label htmlFor={`question-${question.id}`} className="block font-medium mb-3 text-gray-800 dark:text-dark-text">
               {question.text}
               <span className="ml-2 text-sm text-gray-600 dark:text-dark-muted">
                 (Weight: {(question.weight * 100)}%)
               </span>
-              {hasAttemptedFinish && !question.answer && (
-                <span className="ml-2 text-sm text-red-600 dark:text-red-400">
-                  (Required)
-                </span>
-              )}
             </label>
             <div className={`mt-3 ${ANSWER_OPTIONS_LAYOUT.horizontal ? 'sm:flex sm:flex-row sm:flex-wrap sm:gap-4' : 'flex flex-col'} gap-2`}>
               {ANSWER_OPTIONS.map(option => (
@@ -176,63 +196,49 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
           </div>
         ))}
         
-        {totalPages > 1 ? (
-          <div className="flex justify-between items-center mt-8">
-            <button 
-              onClick={handlePrevious} 
-              className="btn bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text hover:bg-gray-50 dark:hover:bg-dark-card-hover" 
-              disabled={currentPage === 1}
-            >
-              Previous
-            </button>
-            
-            <div className="flex flex-col items-end">
-              {!canProceed() && (
-                <span className="text-sm text-red-600 dark:text-red-400 mb-2">
-                  {getUnansweredCount()} question{getUnansweredCount() !== 1 ? 's' : ''} remaining
-                </span>
-              )}
-              {currentPage < totalPages ? (
-                <button 
-                  onClick={handleNext} 
-                  className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
-                  disabled={!canProceed()}
-                >
-                  Next
-                </button>
-              ) : (
-                <button 
-                  onClick={handleNext} 
-                  className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
-                  disabled={!canProceed()}
-                >
-                  {onFinish ? 'Save Changes' : 'Finish'}
-                </button>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-end mt-8">
+        <div className="flex justify-between items-center mt-8">
+          <button 
+            onClick={handlePrevious} 
+            className="btn bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text hover:bg-gray-50 dark:hover:bg-dark-card-hover" 
+            disabled={currentCategory === CATEGORIES[0]}
+          >
+            Previous Category
+          </button>
+          
+          <div className="flex flex-col items-end">
             {!canProceed() && (
               <span className="text-sm text-red-600 dark:text-red-400 mb-2">
-                {getUnansweredCount()} question{getUnansweredCount() !== 1 ? 's' : ''} remaining
+                Please answer at least one question to proceed
               </span>
             )}
-            <button 
-              onClick={handleNext} 
-              className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
-              disabled={!canProceed()}
-            >
-              {onFinish ? 'Save Changes' : 'Finish'}
-            </button>
+            <div className="text-sm text-gray-600 dark:text-dark-muted mb-2">
+              {getAnsweredCount()} answered, {getUnansweredCount()} unanswered
+            </div>
+            {currentCategory !== CATEGORIES[CATEGORIES.length - 1] ? (
+              <button 
+                onClick={handleNext} 
+                className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
+                disabled={!canProceed()}
+              >
+                Next Category
+              </button>
+            ) : (
+              <button 
+                onClick={handleNext} 
+                className={`btn ${canProceed() ? 'btn-primary' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'}`}
+                disabled={!canProceed()}
+              >
+                {onFinish ? 'Save Changes' : 'Finish'}
+              </button>
+            )}
           </div>
-        )}
+        </div>
       </div>
       
       <div className="mt-6 card bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border">
         <p className="text-gray-600 dark:text-dark-muted mb-4">
-          Please answer all questions before proceeding.
-          Select "N/A" for any questions that don't apply to the content you're assessing.
+          Answer the questions that apply to the content you're assessing.
+          Questions left unanswered or marked as "N/A" will not be included in the final assessment.
         </p>
         
         <div className="p-4 bg-gray-50 dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded-xl">
@@ -256,7 +262,7 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
             </div>
             <div className="flex items-center">
               <kbd className="px-2 py-1 bg-white dark:bg-glass-bg border border-gray-200 dark:border-glass-border rounded mr-2 text-gray-700 dark:text-dark-text">Enter</kbd>
-              <span className="text-gray-700 dark:text-dark-text">to save changes</span>
+              <span className="text-gray-700 dark:text-dark-text">to proceed to next category</span>
             </div>
           </div>
         </div>
