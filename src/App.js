@@ -9,7 +9,7 @@ import About from './pages/About';
 import SearchAssessments from './pages/SearchAssessments';
 import FeaturedReleases from './pages/FeaturedReleases';
 import Donate from './pages/Donate';
-import SavedAssessments from './pages/SavedAssessments';
+
 import NewAssessment from './pages/NewAssessment';
 import AssessmentWizard from './pages/AssessmentWizard';
 import Results from './pages/Results';
@@ -124,14 +124,7 @@ function App() {
                 </AppLayout>
               } 
             />
-            <Route 
-              path="/saved" 
-              element={
-                <AppLayout>
-                  <SavedAssessments />
-                </AppLayout>
-              } 
-            />
+
             <Route 
               path="/new" 
               element={

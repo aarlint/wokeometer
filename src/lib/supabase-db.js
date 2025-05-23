@@ -2,15 +2,69 @@ import { supabase } from './supabase';
 import { useAuth0 } from '@auth0/auth0-react';
 import { calculateScore } from '../data';
 
-// Custom hook to get the current user's ID
+// Custom hook to get the current user's ID and email (for security)
 export const useCurrentUserId = () => {
-  const { user } = useAuth0();
-  return user?.sub;
+  const { user, isAuthenticated } = useAuth0();
+  
+  // Only return user ID if properly authenticated and has required fields
+  if (!isAuthenticated || !user?.sub || !user?.email || !user?.email_verified) {
+    return null;
+  }
+  
+  return user.sub;
+};
+
+// Custom hook to get current user info for security validation
+export const useCurrentUser = () => {
+  const { user, isAuthenticated } = useAuth0();
+  
+  if (!isAuthenticated || !user?.sub || !user?.email) {
+    return null;
+  }
+  
+  return {
+    id: user.sub,
+    email: user.email,
+    emailVerified: user.email_verified,
+    name: user.name,
+    picture: user.picture
+  };
+};
+
+// Validate user identity for security
+const validateUserIdentity = (userId, userInfo) => {
+  if (!userId || !userInfo) {
+    throw new Error('User not authenticated');
+  }
+  
+  if (userId !== userInfo.id) {
+    throw new Error('User identity validation failed - ID mismatch');
+  }
+  
+  if (!userInfo.email) {
+    throw new Error('User email required for security validation');
+  }
+  
+  if (!userInfo.emailVerified) {
+    throw new Error('Email verification required. Please check your email and verify your account before creating or editing assessments.');
+  }
+  
+  // Additional security checks
+  if (typeof userId !== 'string' || userId.length < 10) {
+    throw new Error('Invalid user identifier format');
+  }
+  
+  return true;
 };
 
 // Save a new assessment
-export const saveAssessment = async (userId, showName, questions, category, showDetails = null) => {
+export const saveAssessment = async (userId, showName, questions, category, showDetails = null, userInfo = null) => {
   if (!userId) throw new Error('User not authenticated');
+  
+  // Additional security validation if userInfo is provided
+  if (userInfo) {
+    validateUserIdentity(userId, userInfo);
+  }
 
   const { data, error } = await supabase
     .from('assessments')
@@ -73,8 +127,13 @@ export const getAssessment = async (id) => {
 };
 
 // Update an assessment
-export const updateAssessment = async (userId, id, showName, questions, category, showDetails = null) => {
+export const updateAssessment = async (userId, id, showName, questions, category, showDetails = null, userInfo = null) => {
   if (!userId) throw new Error('User not authenticated');
+  
+  // Additional security validation if userInfo is provided
+  if (userInfo) {
+    validateUserIdentity(userId, userInfo);
+  }
 
   const { data, error } = await supabase
     .from('assessments')
@@ -82,8 +141,7 @@ export const updateAssessment = async (userId, id, showName, questions, category
       show_name: showName,
       questions,
       category,
-      show_details: showDetails,
-      updated_at: new Date().toISOString()
+      show_details: showDetails
     })
     .eq('id', id)
     .eq('user_id', userId)
@@ -95,8 +153,13 @@ export const updateAssessment = async (userId, id, showName, questions, category
 };
 
 // Delete an assessment
-export const deleteAssessment = async (userId, id) => {
+export const deleteAssessment = async (userId, id, userInfo = null) => {
   if (!userId) throw new Error('User not authenticated');
+  
+  // Additional security validation if userInfo is provided
+  if (userInfo) {
+    validateUserIdentity(userId, userInfo);
+  }
 
   const { error } = await supabase
     .from('assessments')

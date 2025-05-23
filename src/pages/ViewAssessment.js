@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { getAssessment, useCurrentUserId } from '../lib/supabase-db';
+import { getAssessment, deleteAssessment, useCurrentUserId, useCurrentUser } from '../lib/supabase-db';
 import { getWokenessCategory, QUESTIONS } from '../data';
-import { FaEye, FaEyeSlash, FaInfoCircle, FaArrowLeft } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaInfoCircle, FaArrowLeft, FaEdit, FaTrash, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
 
 const ViewAssessment = () => {
   const { id } = useParams();
@@ -11,7 +11,10 @@ const ViewAssessment = () => {
   const [assessment, setAssessment] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const userId = useCurrentUserId();
+  const userInfo = useCurrentUser();
 
   // Check for developer flag in URL
   const urlParams = new URLSearchParams(location.search);
@@ -101,23 +104,73 @@ const ViewAssessment = () => {
     return "";
   };
 
+  const handleEdit = () => {
+    navigate(`/edit/${id}`);
+  };
+
+  const handleDelete = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      setDeleteLoading(true);
+      setError(null);
+      setShowDeleteModal(false); // Close modal
+      await deleteAssessment(userId, parseInt(id), userInfo);
+      navigate('/search');
+    } catch (err) {
+      setError('Failed to delete assessment. Please try again.');
+      console.error('Error deleting assessment:', err);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 px-4 py-8">
       {/* Header */}
       <div className="space-y-4">
         <button 
-          onClick={() => navigate('/saved')} 
+          onClick={() => navigate('/search')} 
           className="flex items-center gap-2 text-primary hover:text-primary-hover transition-colors"
         >
           <FaArrowLeft />
-          Back to Saved Assessments
+          Back to Search Assessments
         </button>
         
-        <div className="flex items-center gap-4">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">{assessment.show_name}</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">{assessment.show_name}</h1>
+            {isUserAssessment && (
+              <div className="bg-primary text-white px-3 py-1 rounded-lg text-sm font-medium">
+                Your Assessment
+              </div>
+            )}
+          </div>
+          
+          {/* Edit and Delete buttons for user's own assessments */}
           {isUserAssessment && (
-            <div className="bg-primary text-white px-3 py-1 rounded-lg text-sm font-medium">
-              Your Assessment
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleEdit}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+              >
+                <FaEdit className="w-4 h-4" />
+                Edit
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors font-medium"
+              >
+                <FaTrash className="w-4 h-4" />
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           )}
         </div>
@@ -232,8 +285,6 @@ const ViewAssessment = () => {
                   <div key={question.id} className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
                     <p className="text-sm font-medium text-red-800 dark:text-red-200">{question.text}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-red-600 dark:text-red-400">Weight: {question.weight}</span>
-                      <span className="text-xs text-red-600 dark:text-red-400">•</span>
                       <span className="text-xs text-red-600 dark:text-red-400">{question.category}</span>
                     </div>
                   </div>
@@ -253,8 +304,6 @@ const ViewAssessment = () => {
                   <div key={question.id} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                     <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">{question.text}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-yellow-600 dark:text-yellow-400">Weight: {question.weight}</span>
-                      <span className="text-xs text-yellow-600 dark:text-yellow-400">•</span>
                       <span className="text-xs text-yellow-600 dark:text-yellow-400">{question.category}</span>
                     </div>
                   </div>
@@ -274,8 +323,6 @@ const ViewAssessment = () => {
                   <div key={question.id} className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                     <p className="text-sm font-medium text-green-800 dark:text-green-200">{question.text}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-green-600 dark:text-green-400">Weight: {question.weight}</span>
-                      <span className="text-xs text-green-600 dark:text-green-400">•</span>
                       <span className="text-xs text-green-600 dark:text-green-400">{question.category}</span>
                     </div>
                   </div>
@@ -295,8 +342,6 @@ const ViewAssessment = () => {
                   <div key={question.id} className="p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg border border-gray-200 dark:border-gray-700">
                     <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{question.text}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-600 dark:text-gray-400">Weight: {question.weight}</span>
-                      <span className="text-xs text-gray-600 dark:text-gray-400">•</span>
                       <span className="text-xs text-gray-600 dark:text-gray-400">{question.category}</span>
                     </div>
                   </div>
@@ -306,6 +351,51 @@ const ViewAssessment = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={cancelDelete}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                  <FaExclamationTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Delete Assessment
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    This action cannot be undone
+                  </p>
+                </div>
+              </div>
+              
+              <p className="text-gray-700 dark:text-gray-300 mb-6">
+                Are you sure you want to delete your assessment for{' '}
+                <span className="font-semibold">"{assessment.show_name}"</span>?
+              </p>
+              
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={cancelDelete}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleteLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors font-medium"
+                >
+                  <FaTrash className="w-4 h-4" />
+                  {deleteLoading ? 'Deleting...' : 'Delete Assessment'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

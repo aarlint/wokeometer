@@ -34,7 +34,7 @@
   }
   
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 ease-in-out;
+    @apply px-4 py-3 rounded-lg font-medium transition-all duration-200 ease-in-out min-h-[44px] flex items-center justify-center;
   }
   
   .btn-primary {
@@ -54,7 +54,7 @@
   }
   
   .form-input {
-    @apply bg-glass-bg border border-glass-border rounded-lg px-4 py-2 text-dark-text focus:outline-none focus:ring-2 focus:ring-primary;
+    @apply bg-glass-bg border border-glass-border rounded-lg px-4 py-3 text-dark-text focus:outline-none focus:ring-2 focus:ring-primary;
   }
   
   .category-limited {
@@ -76,7 +76,9 @@
 
 /* Custom container */
 .container {
-  @apply max-w-6xl mx-auto px-4 py-6;
+  @apply max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Header styling */
@@ -180,8 +182,8 @@ input[type="radio"]:checked::before {
 .slider {
   -webkit-appearance: none;
   appearance: none;
-  height: 8px;
-  border-radius: 4px;
+  height: 10px;
+  border-radius: 5px;
   outline: none;
   opacity: 1;
   -webkit-transition: .2s;
@@ -196,8 +198,8 @@ input[type="radio"]:checked::before {
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: #ffffff;
   border: 3px solid #3b82f6;
@@ -213,8 +215,8 @@ input[type="radio"]:checked::before {
 
 /* Firefox slider thumb */
 .slider::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: #ffffff;
   border: 3px solid #3b82f6;
@@ -230,8 +232,8 @@ input[type="radio"]:checked::before {
 
 /* Firefox slider track */
 .slider::-moz-range-track {
-  height: 8px;
-  border-radius: 4px;
+  height: 10px;
+  border-radius: 5px;
 }
 
 /* Disabled slider styles */
@@ -247,10 +249,91 @@ input[type="radio"]:checked::before {
   cursor: not-allowed;
 }
 
+/* Mobile-specific enhancements */
+@media (max-width: 768px) {
+  .slider::-webkit-slider-thumb {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .slider::-moz-range-thumb {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .slider {
+    height: 12px;
+  }
+  
+  .slider::-moz-range-track {
+    height: 12px;
+  }
+}
+
 /* Custom line-clamp utility for overview text */
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Mobile-specific utilities */
+@media (max-width: 640px) {
+  /* Prevent any horizontal overflow */
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+  
+  /* Ensure all containers respect viewport width */
+  * {
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+  
+  /* Ensure minimum touch targets on mobile */
+  button, .btn, input[type="button"], input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better mobile text sizing */
+  h1 {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+    line-height: 1.3 !important;
+  }
+  
+  h3 {
+    font-size: 1.25rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Improve readability on mobile */
+  p, div, span {
+    line-height: 1.6 !important;
+  }
+  
+  /* Better mobile card spacing */
+  .card {
+    margin-bottom: 1rem;
+    padding: 1rem;
+  }
+  
+  /* Fix any potential wide elements */
+  img, video, iframe {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Ensure grid containers don't overflow */
+  .grid {
+    overflow: hidden;
+  }
 }

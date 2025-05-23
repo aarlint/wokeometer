@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { QUESTIONS } from '../data';
 import { FaFilm, FaTv, FaYoutube, FaBookOpen, FaEllipsisH, FaTimes } from 'react-icons/fa';
 import { TMDB_API_KEY } from '../config/api';
+import SecurityWarning from '../components/SecurityWarning';
 
 const NewAssessment = ({ setCurrentAssessment }) => {
   const location = useLocation();
@@ -199,6 +200,8 @@ const NewAssessment = ({ setCurrentAssessment }) => {
   return (
     <div>
       <h2 className="text-3xl font-bold text-center mb-8 text-light-text dark:text-dark-text">New Assessment</h2>
+      
+      <SecurityWarning />
       
       <div className="max-w-2xl mx-auto card">
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">

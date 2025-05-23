@@ -60,12 +60,12 @@ const CommentsPanel = ({ showName, isOpen, onClose }) => {
     <>
       {/* Overlay */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 w-full h-full"
         onClick={onClose}
       />
       
       {/* Comments Panel */}
-      <div className="fixed inset-y-0 right-0 w-96 bg-white dark:bg-dark-card shadow-lg transform transition-transform duration-300 ease-in-out z-50">
+      <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white dark:bg-dark-card shadow-lg transform transition-transform duration-300 ease-in-out z-50 max-h-screen">
         <div className="h-full flex flex-col">
           <div className="p-4 border-b border-gray-200 dark:border-dark-border flex justify-between items-center">
             <h2 className="text-xl font-bold text-gray-800 dark:text-dark-text">Comments for {showName}</h2>

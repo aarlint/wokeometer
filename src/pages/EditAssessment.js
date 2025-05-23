@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAssessment, updateAssessment, useCurrentUserId } from '../lib/supabase-db';
+import { getAssessment, updateAssessment, useCurrentUserId, useCurrentUser } from '../lib/supabase-db';
 import { calculateScore, getWokenessCategory, QUESTIONS } from '../data';
 import AssessmentWizard from './AssessmentWizard';
 
@@ -8,6 +8,7 @@ const EditAssessment = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const userId = useCurrentUserId();
+  const userInfo = useCurrentUser();
   const [currentAssessment, setCurrentAssessment] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -70,13 +71,23 @@ const EditAssessment = () => {
       const score = calculateScore(currentAssessment.questions);
       const category = getWokenessCategory(score);
       
+      // Filter out unanswered questions and only keep id, answer, and weight (needed for score calculation)
+      const filteredQuestions = currentAssessment.questions
+        .filter(q => q.answer && q.answer !== "" && q.answer !== "N/A")
+        .map(q => ({
+          id: q.id,
+          answer: q.answer,
+          weight: q.weight
+        }));
+      
       await updateAssessment(
         userId,
         parseInt(id),
         currentAssessment.showName,
-        currentAssessment.questions,
+        filteredQuestions,
         category,
-        currentAssessment.showDetails
+        currentAssessment.showDetails,
+        userInfo
       );
       
       navigate(`/view/${id}`);

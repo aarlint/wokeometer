@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { calculateScore, getWokenessCategory, saveAssessment } from '../data';
-import { useCurrentUserId } from '../lib/supabase-db';
-import { FaEye, FaEyeSlash, FaInfoCircle } from 'react-icons/fa';
+import { useCurrentUserId, useCurrentUser } from '../lib/supabase-db';
+import { FaEye, FaEyeSlash, FaInfoCircle, FaFilm, FaTv } from 'react-icons/fa';
 
 const Results = ({ currentAssessment, setCurrentAssessment }) => {
   const [score, setScore] = useState(0);
@@ -12,6 +12,7 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const userId = useCurrentUserId();
+  const userInfo = useCurrentUser();
   
   // Check for developer flag in URL
   const urlParams = new URLSearchParams(location.search);
@@ -61,13 +62,14 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
         showDetails: currentAssessment.showDetails || null
       };
 
-      // Save the assessment
+      // Save the assessment with enhanced security
       await saveAssessment(
         userId,
         assessmentToSave.showName,
         assessmentToSave.questions,
         assessmentToSave.category,
-        assessmentToSave.showDetails
+        assessmentToSave.showDetails,
+        userInfo
       );
       
       setIsSaved(true);
@@ -86,8 +88,8 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
   };
   
   const handleViewSaved = () => {
-    // Navigate to the saved assessments page
-    navigate('/saved');
+    // Navigate to the search assessments page
+    navigate('/search');
   };
 
   // Group answered questions by response type
@@ -114,10 +116,6 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Assessment Complete
         </h2>
-        <p className="text-xl text-primary font-semibold">
-          {currentAssessment.showName}
-          {currentAssessment.showType && ` (${currentAssessment.showType})`}
-        </p>
       </div>
 
       {/* Show Details Card */}
@@ -131,6 +129,22 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
             />
           )}
           <div className="flex-1">
+            {/* Movie/TV Show Icon */}
+            <div className="flex items-center gap-3 mb-4">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {currentAssessment.showName}
+              </h3>
+              {currentAssessment.showDetails?.media_type && (
+                <div className="flex items-center">
+                  {currentAssessment.showDetails.media_type === 'movie' ? (
+                    <FaFilm className="text-xl text-gray-600 dark:text-gray-400" title="Movie" />
+                  ) : (
+                    <FaTv className="text-xl text-gray-600 dark:text-gray-400" title="TV Show" />
+                  )}
+                </div>
+              )}
+            </div>
+
             {currentAssessment.showDetails && (
               <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
                 <p>
@@ -164,32 +178,37 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
               </div>
             )}
             
-            {/* Score Display - Hidden for regular users, shown with dev flag */}
-            {isDevMode ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <FaEye className="text-primary" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Developer Mode - Scores Visible</span>
+            {/* Assessment Results - Enhanced visibility */}
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border-l-4 border-primary">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Your Assessment Results
+              </h4>
+              {isDevMode ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FaEye className="text-primary" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Developer Mode - Scores Visible</span>
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900 dark:text-white">{score}</div>
+                  <div className={`inline-block px-4 py-2 rounded-full text-lg font-semibold ${getCategoryClass()}`}>
+                    {category}
+                  </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 dark:text-white">{score}</div>
-                <div className={`inline-block px-4 py-2 rounded-full text-lg font-semibold ${getCategoryClass()}`}>
-                  {category}
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FaEyeSlash className="text-gray-400" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Assessment scores are hidden for privacy</span>
+                  </div>
+                  <div className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+                    Assessment Successfully Completed
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400">
+                    {totalAnswered} questions answered • Results saved to your profile
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <FaEyeSlash className="text-gray-400" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Assessment scores are hidden</span>
-                </div>
-                <div className="text-2xl font-semibold text-gray-700 dark:text-gray-300">
-                  Assessment Completed
-                </div>
-                <div className="text-gray-600 dark:text-gray-400">
-                  {totalAnswered} questions answered
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -291,7 +310,7 @@ const Results = ({ currentAssessment, setCurrentAssessment }) => {
               onClick={handleViewSaved} 
               className="flex-1 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-hover transition-colors"
             >
-              View Saved Assessments
+              Search Assessments
             </button>
           )}
           <button 

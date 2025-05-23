@@ -2,14 +2,21 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../data';
 import QuestionDetailsModal from '../components/QuestionDetailsModal';
+import SecurityWarning from '../components/SecurityWarning';
 import { FaInfoCircle, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 
 const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish }) => {
   const [hasAttemptedFinish, setHasAttemptedFinish] = useState(false);
-  const [noWokeContent, setNoWokeContent] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
   const [botProtectionCheck, setBotProtectionCheck] = useState(false);
   const navigate = useNavigate();
+  
+  // Initialize noWokeContent based on whether all questions are N/A
+  const [noWokeContent, setNoWokeContent] = useState(() => {
+    if (!currentAssessment?.questions) return false;
+    const answeredQuestions = currentAssessment.questions.filter(q => q.answer && q.answer !== "");
+    return answeredQuestions.length > 0 && answeredQuestions.every(q => q.answer === "N/A");
+  });
   
   // New answer options with 4 detents
   const answerOptions = [
@@ -108,25 +115,23 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
     const currentIndex = answerOptions.findIndex(option => option.value === currentAnswer);
 
     return (
-      <div className={`p-6 rounded-lg border transition-all duration-200 ${
+      <div className={`p-4 sm:p-6 rounded-lg border transition-all duration-200 ${
         disabled 
           ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-60' 
           : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:border-primary/50'
       }`}>
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1 pr-4">
-            <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3 sm:gap-4">
+          <div className="flex-1">
+            <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 leading-tight">
               {question.text}
             </h4>
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>Weight: {question.weight}</span>
-              <span>•</span>
               <span>{question.category}</span>
             </div>
           </div>
           <button
             onClick={() => setSelectedQuestionId(question.id)}
-            className="flex-shrink-0 p-2 text-gray-400 hover:text-primary transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="flex-shrink-0 self-start sm:self-auto p-2 text-gray-400 hover:text-primary transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="More information"
           >
             <FaInfoCircle className="w-5 h-5" />
@@ -190,6 +195,8 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      <SecurityWarning />
+      
       {/* Header */}
       <div className="text-center">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">

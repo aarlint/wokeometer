@@ -28,7 +28,7 @@ const QuestionDetailsModal = ({ question, isOpen, onClose }) => {
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[9999]"
+      className="fixed inset-0 z-[9999] overflow-hidden"
       onClick={(e) => {
         // Only close if clicking the backdrop, not the modal content
         if (e.target === e.currentTarget) {
@@ -38,13 +38,13 @@ const QuestionDetailsModal = ({ question, isOpen, onClose }) => {
     >
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 w-full h-full"
       />
       
       {/* Modal */}
-      <div className="fixed inset-0 flex items-center justify-center p-4">
+      <div className="fixed inset-0 flex items-center justify-center p-2 sm:p-4">
         <div 
-          className="bg-white dark:bg-dark-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative shadow-2xl"
+          className="bg-white dark:bg-dark-card rounded-lg max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto relative shadow-2xl"
           onClick={(e) => e.stopPropagation()} // Prevent clicks inside modal from closing it
         >
           {/* Header */}

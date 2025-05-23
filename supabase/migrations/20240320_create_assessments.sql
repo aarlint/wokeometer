@@ -25,6 +25,15 @@ ALTER TABLE assessments ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL;
 -- Add user_id column to comments
 ALTER TABLE comments ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL;
 
+-- Add user_email column to assessments for security audit trail
+ALTER TABLE assessments ADD COLUMN IF NOT EXISTS user_email TEXT;
+
+-- Add user_email column to comments for security audit trail
+ALTER TABLE comments ADD COLUMN IF NOT EXISTS user_email TEXT;
+
+-- Add score column to assessments if it doesn't exist
+ALTER TABLE assessments ADD COLUMN IF NOT EXISTS score INTEGER DEFAULT 0;
+
 -- Create an index on show_name for faster searches
 CREATE INDEX IF NOT EXISTS idx_assessments_show_name ON assessments(show_name);
 CREATE INDEX IF NOT EXISTS idx_comments_show_name ON comments(show_name);
@@ -36,6 +45,10 @@ CREATE INDEX IF NOT EXISTS idx_comments_date ON comments(created_at);
 -- Create an index on user_id for faster user-specific queries
 CREATE INDEX IF NOT EXISTS idx_assessments_user_id ON assessments(user_id);
 CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
+
+-- Create an index on user_email for security auditing
+CREATE INDEX IF NOT EXISTS idx_assessments_user_email ON assessments(user_email);
+CREATE INDEX IF NOT EXISTS idx_comments_user_email ON comments(user_email);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE assessments ENABLE ROW LEVEL SECURITY;
