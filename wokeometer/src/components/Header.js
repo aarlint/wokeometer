@@ -103,22 +103,52 @@ const Header = () => {
               <ul className="flex gap-6">
                 <li>
                   <Link 
-                    to="/" 
-                    className={`text-gray-700 dark:text-dark-text hover:text-primary transition-colors ${
-                      isActive('/') ? 'border-b-2 border-primary' : ''
+                    to="/about" 
+                    className={`text-gray-700 dark:text-gray-300 hover:text-primary transition-colors ${
+                      isActive('/about') ? 'border-b-2 border-primary' : ''
                     }`}
                   >
-                    Home
+                    About Woke-O-Meter
                   </Link>
                 </li>
                 <li>
                   <Link 
                     to="/new" 
-                    className={`text-gray-700 dark:text-dark-text hover:text-primary transition-colors ${
+                    className={`text-gray-700 dark:text-gray-300 hover:text-primary transition-colors ${
                       isActive('/new') ? 'border-b-2 border-primary' : ''
                     }`}
                   >
-                    New Assessment
+                    Submit Assessment
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/search" 
+                    className={`text-gray-700 dark:text-gray-300 hover:text-primary transition-colors ${
+                      isActive('/search') ? 'border-b-2 border-primary' : ''
+                    }`}
+                  >
+                    Search Assessments
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/featured" 
+                    className={`text-gray-700 dark:text-gray-300 hover:text-primary transition-colors ${
+                      isActive('/featured') ? 'border-b-2 border-primary' : ''
+                    }`}
+                  >
+                    Featured Releases
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/donate" 
+                    className={`text-gray-700 dark:text-gray-300 hover:text-primary transition-colors ${
+                      isActive('/donate') ? 'border-b-2 border-primary' : ''
+                    }`}
+                  >
+                    Join the Fight
                   </Link>
                 </li>
               </ul>
@@ -130,9 +160,9 @@ const Header = () => {
               aria-label="Toggle theme"
             >
               {isDark ? (
-                <FaSun className="w-5 h-5 text-gray-700 dark:text-dark-text" />
+                <FaSun className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               ) : (
-                <FaMoon className="w-5 h-5 text-gray-700 dark:text-dark-text" />
+                <FaMoon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               )}
             </button>
           </div>
@@ -146,9 +176,9 @@ const Header = () => {
               aria-label="Toggle theme"
             >
               {isDark ? (
-                <FaSun className="w-5 h-5 text-gray-700 dark:text-dark-text" />
+                <FaSun className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               ) : (
-                <FaMoon className="w-5 h-5 text-gray-700 dark:text-dark-text" />
+                <FaMoon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               )}
             </button>
             <button
@@ -157,9 +187,9 @@ const Header = () => {
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
-                <FaTimes className="w-5 h-5 text-gray-700 dark:text-dark-text" />
+                <FaTimes className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               ) : (
-                <FaBars className="w-5 h-5 text-gray-700 dark:text-dark-text" />
+                <FaBars className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               )}
             </button>
           </div>
@@ -172,24 +202,57 @@ const Header = () => {
               <ul className="flex flex-col gap-4">
                 <li>
                   <Link 
-                    to="/" 
+                    to="/about" 
                     onClick={closeMobileMenu}
-                    className={`block py-2 text-gray-700 dark:text-dark-text hover:text-primary transition-colors ${
-                      isActive('/') ? 'border-l-4 border-primary' : ''
+                    className={`block py-2 text-gray-700 dark:text-gray-300 hover:text-primary transition-colors ${
+                      isActive('/about') ? 'border-l-4 border-primary' : ''
                     }`}
                   >
-                    Home
+                    About Woke-O-Meter
                   </Link>
                 </li>
                 <li>
                   <Link 
                     to="/new" 
                     onClick={closeMobileMenu}
-                    className={`block py-2 text-gray-700 dark:text-dark-text hover:text-primary transition-colors ${
+                    className={`block py-2 text-gray-700 dark:text-gray-300 hover:text-primary transition-colors ${
                       isActive('/new') ? 'border-l-4 border-primary' : ''
                     }`}
                   >
-                    New Assessment
+                    Submit Assessment
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/search" 
+                    onClick={closeMobileMenu}
+                    className={`block py-2 text-gray-700 dark:text-gray-300 hover:text-primary transition-colors ${
+                      isActive('/search') ? 'border-l-4 border-primary' : ''
+                    }`}
+                  >
+                    Search Assessments
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/featured" 
+                    onClick={closeMobileMenu}
+                    className={`block py-2 text-gray-700 dark:text-gray-300 hover:text-primary transition-colors ${
+                      isActive('/featured') ? 'border-l-4 border-primary' : ''
+                    }`}
+                  >
+                    Featured Releases
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/donate" 
+                    onClick={closeMobileMenu}
+                    className={`block py-2 text-gray-700 dark:text-gray-300 hover:text-primary transition-colors ${
+                      isActive('/donate') ? 'border-l-4 border-primary' : ''
+                    }`}
+                  >
+                    Join the Fight
                   </Link>
                 </li>
               </ul>

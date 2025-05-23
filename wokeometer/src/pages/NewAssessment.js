@@ -12,6 +12,7 @@ const NewAssessment = ({ setCurrentAssessment }) => {
   const [selectedShow, setSelectedShow] = useState(location.state?.showDetails || null);
   const [isSearching, setIsSearching] = useState(false);
   const [isSelectingFromDropdown, setIsSelectingFromDropdown] = useState(false);
+  const [showFullOverview, setShowFullOverview] = useState(false);
   const navigate = useNavigate();
   
   const showTypes = [
@@ -34,7 +35,7 @@ const NewAssessment = ({ setCurrentAssessment }) => {
     }
   }, [location.state?.showDetails]);
 
-  // Search TMDB for show/movie
+  // Search TMDB for show/movie with additional details
   const searchTMDB = async (query) => {
     setIsSearching(true);
     try {
@@ -54,7 +55,42 @@ const NewAssessment = ({ setCurrentAssessment }) => {
         const filteredResults = data.results
           .filter(result => !result.adult)
           .sort((a, b) => b.popularity - a.popularity);
-        setSearchResults(filteredResults);
+        
+        // Enhance results with cast information
+        const enhancedResults = await Promise.all(
+          filteredResults.slice(0, 10).map(async (result) => {
+            try {
+              const mediaType = result.media_type;
+              const creditsResponse = await fetch(
+                `https://api.themoviedb.org/3/${mediaType}/${result.id}/credits`,
+                {
+                  headers: {
+                    'Authorization': `Bearer ${TMDB_API_KEY}`,
+                    'Content-Type': 'application/json'
+                  }
+                }
+              );
+              const creditsData = await creditsResponse.json();
+              const mainCast = creditsData.cast
+                ?.slice(0, 3)
+                .map(actor => actor.name)
+                .join(', ') || 'Cast information unavailable';
+              
+              return {
+                ...result,
+                mainCast
+              };
+            } catch (error) {
+              console.error('Error fetching cast for:', result.title || result.name, error);
+              return {
+                ...result,
+                mainCast: 'Cast information unavailable'
+              };
+            }
+          })
+        );
+        
+        setSearchResults(enhancedResults);
       } else {
         setSearchResults([]);
       }
@@ -202,61 +238,100 @@ const NewAssessment = ({ setCurrentAssessment }) => {
             {/* Search Results Dropdown */}
             {searchResults.length > 0 && !selectedShow && (
               <div className="mt-2 bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded-md shadow-lg max-h-96 overflow-y-auto">
-                {searchResults.map((result) => (
-                  <div
-                    key={result.id}
-                    className="flex items-center p-2 hover:bg-gray-100 dark:hover:bg-dark-card-hover cursor-pointer"
-                    onClick={() => handleShowSelect(result)}
-                  >
-                    {result.poster_path && (
-                      <img
-                        src={`https://image.tmdb.org/t/p/w92${result.poster_path}`}
-                        alt={result.title || result.name}
-                        className="w-12 h-18 object-cover rounded mr-2"
-                      />
-                    )}
-                    <div>
-                      <div className="font-medium text-light-text dark:text-dark-text">
-                        {result.title || result.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {result.release_date || result.first_air_date}
+                {searchResults.map((result) => {
+                  const year = result.release_date 
+                    ? new Date(result.release_date).getFullYear()
+                    : result.first_air_date 
+                    ? new Date(result.first_air_date).getFullYear()
+                    : 'Year N/A';
+                  
+                  return (
+                    <div
+                      key={result.id}
+                      className="flex items-center p-3 hover:bg-gray-100 dark:hover:bg-dark-card-hover cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                      onClick={() => handleShowSelect(result)}
+                    >
+                      {result.poster_path && (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w92${result.poster_path}`}
+                          alt={result.title || result.name}
+                          className="w-12 h-18 object-cover rounded mr-3 flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-light-text dark:text-dark-text">
+                          {result.title || result.name}, {year}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                          {result.mainCast}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
           
           {/* Selected Show Details */}
           {selectedShow && (
-            <div className="flex gap-4 p-4 bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border">
+            <div className="flex gap-4 p-6 bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border">
               {selectedShow.poster_path && (
                 <img
                   src={`https://image.tmdb.org/t/p/w342${selectedShow.poster_path}`}
                   alt={selectedShow.title || selectedShow.name}
-                  className="w-32 h-48 object-cover rounded-lg shadow-md"
+                  className="w-32 h-48 object-cover rounded-lg shadow-md flex-shrink-0"
                 />
               )}
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-light-text dark:text-dark-text mb-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xl font-bold text-light-text dark:text-dark-text mb-3">
                   {selectedShow.title || selectedShow.name}
                 </h3>
-                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                  <p>
+                <div className="space-y-2 text-sm">
+                  <p className="text-gray-600 dark:text-gray-400">
                     <span className="font-medium">Release Date:</span>{' '}
-                    {selectedShow.release_date || selectedShow.first_air_date || 'N/A'}
+                    {selectedShow.release_date 
+                      ? new Date(selectedShow.release_date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })
+                      : selectedShow.first_air_date 
+                      ? new Date(selectedShow.first_air_date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })
+                      : 'N/A'}
                   </p>
-                  <p>
+                  <p className="text-gray-600 dark:text-gray-400">
                     <span className="font-medium">Rating:</span>{' '}
-                    {selectedShow.vote_average ? `${selectedShow.vote_average.toFixed(1)}/10` : 'N/A'}
+                    {selectedShow.vote_average 
+                      ? `${selectedShow.vote_average.toFixed(1)}/10 (TMDB)` 
+                      : 'N/A'}
                   </p>
-                  {selectedShow.overview && (
-                    <p className="line-clamp-3">
-                      <span className="font-medium">Overview:</span>{' '}
-                      {selectedShow.overview}
+                  {selectedShow.mainCast && (
+                    <p className="text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">Main Cast:</span>{' '}
+                      {selectedShow.mainCast}
                     </p>
+                  )}
+                  {selectedShow.overview && (
+                    <div className="text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">Overview:</span>{' '}
+                      <div className={`mt-1 ${!showFullOverview ? 'line-clamp-3' : ''}`}>
+                        {selectedShow.overview}
+                      </div>
+                      {selectedShow.overview.length > 200 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowFullOverview(!showFullOverview)}
+                          className="text-primary hover:text-primary-hover text-sm font-medium mt-1 transition-colors"
+                        >
+                          {showFullOverview ? 'See less' : 'See more'}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

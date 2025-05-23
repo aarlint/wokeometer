@@ -707,11 +707,21 @@ export const calculateScore = (answers) => {
   // Filter out unanswered questions
   const validAnswers = answers.filter(q => q.answer && q.answer !== "" && q.answer !== "N/A");
   
-  // Calculate score based on Yes answers and weights
+  // Calculate score based on new answer options and weights
   validAnswers.forEach(question => {
-    if (question.answer === "Yes") {
-      totalScore += 10 * question.weight;
+    let multiplier = 0;
+    
+    // Handle both old and new answer formats for backward compatibility
+    if (question.answer === "Yes" || question.answer === "Strongly Agree") {
+      multiplier = 1.0; // Full weight
+    } else if (question.answer === "Agree") {
+      multiplier = 0.7; // 70% of weight
+    } else if (question.answer === "Disagree" || question.answer === "No") {
+      multiplier = 0; // No points
     }
+    // N/A and empty answers already filtered out above
+    
+    totalScore += 10 * question.weight * multiplier;
   });
   
   return Math.round(totalScore);

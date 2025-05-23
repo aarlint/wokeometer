@@ -4,6 +4,11 @@ import { ThemeProvider } from './context/ThemeContext';
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
 import { auth0Config } from './auth/auth0-config';
 import Header from './components/Header';
+import Home from './pages/Home';
+import About from './pages/About';
+import SearchAssessments from './pages/SearchAssessments';
+import FeaturedReleases from './pages/FeaturedReleases';
+import Donate from './pages/Donate';
 import SavedAssessments from './pages/SavedAssessments';
 import NewAssessment from './pages/NewAssessment';
 import AssessmentWizard from './pages/AssessmentWizard';
@@ -81,6 +86,46 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route 
               path="/" 
+              element={
+                <AppLayout>
+                  <Home />
+                </AppLayout>
+              } 
+            />
+            <Route 
+              path="/about" 
+              element={
+                <AppLayout>
+                  <About />
+                </AppLayout>
+              } 
+            />
+            <Route 
+              path="/search" 
+              element={
+                <AppLayout>
+                  <SearchAssessments />
+                </AppLayout>
+              } 
+            />
+            <Route 
+              path="/featured" 
+              element={
+                <AppLayout>
+                  <FeaturedReleases />
+                </AppLayout>
+              } 
+            />
+            <Route 
+              path="/donate" 
+              element={
+                <AppLayout>
+                  <Donate />
+                </AppLayout>
+              } 
+            />
+            <Route 
+              path="/saved" 
               element={
                 <AppLayout>
                   <SavedAssessments />

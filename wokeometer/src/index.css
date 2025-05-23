@@ -175,3 +175,82 @@ input[type="radio"]:checked::before {
 .radio-label.selected {
   @apply bg-primary bg-opacity-10 border border-primary;
 }
+
+/* Custom Slider Styles for Assessment Wizard */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  outline: none;
+  opacity: 1;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+/* Webkit slider thumb */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #3b82f6;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox slider thumb */
+.slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #3b82f6;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox slider track */
+.slider::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+}
+
+/* Disabled slider styles */
+.slider:disabled::-webkit-slider-thumb {
+  background: #d1d5db;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.slider:disabled::-moz-range-thumb {
+  background: #d1d5db;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Custom line-clamp utility for overview text */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
