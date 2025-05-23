@@ -1,5 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Build and Deploy to GitHub Pages
 
 on:
   # Runs on pushes targeting the default branch
@@ -22,8 +21,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
+  build-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -31,13 +29,40 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: wokeometer/package-lock.json
+          
+      - name: Install dependencies
+        run: |
+          cd wokeometer
+          npm ci
+          
+      - name: Build React app
+        run: |
+          cd wokeometer
+          npm run build
+          
+      - name: Prepare deployment files
+        run: |
+          # Copy build files to root for GitHub Pages deployment
+          cp -r wokeometer/build/* .
+          # Ensure .nojekyll exists to disable Jekyll processing
+          touch .nojekyll
+          
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
+          # Upload the root directory containing the built files
           path: '.'
+          
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v4 
