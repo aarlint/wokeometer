@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { loadAssessmentsForShow, deleteAssessment, useCurrentUserId } from '../lib/supabase-db';
-import { calculateScore, getWokenessCategory, QUESTIONS } from '../data';
+import { getWokenessCategory, QUESTIONS } from '../data';
 import Modal from '../components/Modal';
 import AssessmentSummary from '../components/AssessmentSummary';
 import CommentsPanel from '../components/CommentsPanel';
@@ -43,11 +43,7 @@ const SavedAssessments = () => {
   const navigate = useNavigate();
   const userId = useCurrentUserId();
   
-  useEffect(() => {
-    loadCatalog();
-  }, []);
-  
-  const loadCatalog = async () => {
+  const loadCatalog = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -135,7 +131,11 @@ const SavedAssessments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+  
+  useEffect(() => {
+    loadCatalog();
+  }, [loadCatalog]);
   
   const filteredAssessments = assessments
     .filter(item =>
@@ -164,11 +164,7 @@ const SavedAssessments = () => {
     return "";
   };
 
-  const getScoreColorClass = (score) => {
-    if (score >= 7) return "text-red-500";
-    if (score >= 3) return "text-yellow-500";
-    return "text-green-500";
-  };
+
 
   const handleViewSummary = (show) => {
     setSummaryShow(show);

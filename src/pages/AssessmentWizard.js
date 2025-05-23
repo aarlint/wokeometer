@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CATEGORIES, calculateScore, getWokenessCategory, saveAssessment } from '../data';
+import { CATEGORIES } from '../data';
 import QuestionDetailsModal from '../components/QuestionDetailsModal';
 import { FaInfoCircle, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 
@@ -67,9 +67,6 @@ const AssessmentWizard = ({ currentAssessment, setCurrentAssessment, onFinish })
       setHasAttemptedFinish(true);
       return;
     }
-    
-    const score = noWokeContent ? 0 : calculateScore(currentAssessment.questions);
-    const category = getWokenessCategory(score);
     
     if (onFinish) {
       onFinish();

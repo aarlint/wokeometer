@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAssessment, updateAssessment, useCurrentUserId } from '../lib/supabase-db';
 import { calculateScore, getWokenessCategory, QUESTIONS } from '../data';
@@ -12,11 +12,7 @@ const EditAssessment = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadAssessment();
-  }, [id]);
-
-  const loadAssessment = async () => {
+  const loadAssessment = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -62,7 +58,11 @@ const EditAssessment = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, userId]);
+
+  useEffect(() => {
+    loadAssessment();
+  }, [id, loadAssessment]);
 
   const handleFinish = async () => {
     try {

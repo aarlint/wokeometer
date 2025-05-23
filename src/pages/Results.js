@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { QUESTIONS, CATEGORIES, calculateScore, getWokenessCategory, saveAssessment } from '../data';
+import { calculateScore, getWokenessCategory, saveAssessment } from '../data';
 import { useCurrentUserId } from '../lib/supabase-db';
 import { FaEye, FaEyeSlash, FaInfoCircle } from 'react-icons/fa';
 

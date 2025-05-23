@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { loadAssessmentsForShow } from '../lib/supabase-db';
@@ -21,11 +21,7 @@ const SearchAssessments = () => {
   const [showWokenessInfo, setShowWokenessInfo] = useState(false);
   const navigate = useNavigate();
   
-  useEffect(() => {
-    loadCatalog();
-  }, []);
-  
-  const loadCatalog = async () => {
+  const loadCatalog = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -107,7 +103,11 @@ const SearchAssessments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+  
+  useEffect(() => {
+    loadCatalog();
+  }, [loadCatalog]);
   
   const getWokenessLevel = (score) => {
     if (score === 0) return { level: 'Based Content', color: 'text-blue-600', bgColor: 'bg-blue-100' };

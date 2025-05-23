@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { loadCommentsForShow, addComment, deleteComment, useCurrentUserId } from '../lib/supabase-db';
 import { FaTimes, FaTrash } from 'react-icons/fa';
 
@@ -9,13 +9,7 @@ const CommentsPanel = ({ showName, isOpen, onClose }) => {
   const [loading, setLoading] = useState(true);
   const userId = useCurrentUserId();
 
-  useEffect(() => {
-    if (isOpen && showName) {
-      loadComments();
-    }
-  }, [isOpen, showName]);
-
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -27,7 +21,13 @@ const CommentsPanel = ({ showName, isOpen, onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showName]);
+
+  useEffect(() => {
+    if (isOpen && showName) {
+      loadComments();
+    }
+  }, [isOpen, showName, loadComments]);
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;

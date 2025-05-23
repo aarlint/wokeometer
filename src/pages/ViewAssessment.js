@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getAssessment, useCurrentUserId } from '../lib/supabase-db';
 import { getWokenessCategory, QUESTIONS } from '../data';
@@ -17,11 +17,7 @@ const ViewAssessment = () => {
   const urlParams = new URLSearchParams(location.search);
   const isDevMode = urlParams.get('devflag') === 'true';
 
-  useEffect(() => {
-    loadAssessment();
-  }, [id]);
-
-  const loadAssessment = async () => {
+  const loadAssessment = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -52,7 +48,11 @@ const ViewAssessment = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadAssessment();
+  }, [id, loadAssessment]);
 
   if (loading) {
     return (
