@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { loadAssessmentsForShow, deleteAssessment, useCurrentUserId, useCurrentUser } from '../lib/supabase-db';
 import { QUESTIONS } from '../data';
-import QuestionIconCard from '../components/QuestionIconCard';
 import { 
   FaSearch,
   FaSortUp, 
@@ -16,8 +15,9 @@ import {
   FaEdit,
   FaTrash,
   FaPlus,
-  FaTimes,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaTable,
+  FaTh
 } from 'react-icons/fa';
 
 const SearchAssessments = () => {
@@ -29,6 +29,7 @@ const SearchAssessments = () => {
   const [loading, setLoading] = useState(true);
   const [showWokenessInfo, setShowWokenessInfo] = useState(false);
   const [showMyAssessmentsOnly, setShowMyAssessmentsOnly] = useState(false);
+  const [viewMode, setViewMode] = useState('cards'); // 'table' or 'cards'
   const [deleteLoading, setDeleteLoading] = useState(null); // Track which assessment is being deleted
   const [deleteConfirmModal, setDeleteConfirmModal] = useState(null); // { assessmentId, showName } or null
   const navigate = useNavigate();
@@ -208,7 +209,7 @@ const SearchAssessments = () => {
   const confirmDeleteAssessment = async () => {
     if (!deleteConfirmModal) return;
 
-    const { assessmentId, showName } = deleteConfirmModal;
+    const { assessmentId } = deleteConfirmModal;
 
     try {
       setDeleteLoading(assessmentId);
@@ -326,6 +327,35 @@ const SearchAssessments = () => {
               </button>
             </div>
           )}
+
+          {/* View Mode Toggle */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">View:</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 border rounded-lg transition-colors text-sm sm:text-base ${
+                  viewMode === 'table'
+                    ? 'bg-primary text-white border-primary hover:bg-primary-hover'
+                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+              >
+                <FaTable className="w-4 h-4" />
+                Table
+              </button>
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 border rounded-lg transition-colors text-sm sm:text-base ${
+                  viewMode === 'cards'
+                    ? 'bg-primary text-white border-primary hover:bg-primary-hover'
+                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+              >
+                <FaTh className="w-4 h-4" />
+                Cards
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -376,15 +406,199 @@ const SearchAssessments = () => {
       </div>
       
       {/* Results */}
-      <div className="space-y-6">
-        {filteredAssessments.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400 text-lg">
-              {searchQuery ? 'No assessments found matching your search.' : 'No assessments available yet.'}
-            </p>
+      {filteredAssessments.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 dark:text-gray-400 text-lg">
+            {searchQuery ? 'No assessments found matching your search.' : 'No assessments available yet.'}
+          </p>
+        </div>
+      ) : viewMode === 'table' ? (
+        /* Table View */
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Show
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Release Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Wokeness Level
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Assessments
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Woke Elements
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
+                {filteredAssessments.map((item) => (
+                  <tr key={item.showName} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {item.assessments[0]?.show_details?.poster_path && (
+                          <div className="flex-shrink-0 h-16 w-12 mr-4">
+                            <img
+                              className="h-16 w-12 object-cover rounded"
+                              src={`https://image.tmdb.org/t/p/w92${item.assessments[0].show_details.poster_path}`}
+                              alt={item.showName}
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {item.showName}
+                            </div>
+                            {item.assessments[0]?.show_details?.media_type && (
+                              <div className="flex items-center">
+                                {item.assessments[0].show_details.media_type === 'movie' ? (
+                                  <FaFilm className="text-sm text-gray-400" title="Movie" />
+                                ) : (
+                                  <FaTv className="text-sm text-gray-400" title="TV Show" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {item.assessments[0]?.show_details?.vote_average 
+                              ? `${item.assessments[0].show_details.vote_average.toFixed(1)}/10 TMDB` 
+                              : 'No rating'}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {item.assessments[0]?.show_details?.release_date 
+                        ? new Date(item.assessments[0].show_details.release_date).getFullYear()
+                        : item.assessments[0]?.show_details?.first_air_date 
+                        ? new Date(item.assessments[0].show_details.first_air_date).getFullYear()
+                        : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${item.wokenessLevel.bgColor} ${item.wokenessLevel.color}`}>
+                        {item.wokenessLevel.level}
+                      </span>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Score: {item.averageScore}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {item.totalAssessments}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="max-w-40">
+                        {(() => {
+                          const stronglyWoke = item.assessments[0]?.questions?.filter(q => q.answer === "Strongly Agree" || q.answer === "Yes") || [];
+                          const moderateWoke = item.assessments[0]?.questions?.filter(q => q.answer === "Agree") || [];
+                          const hasWokeElements = stronglyWoke.length > 0 || moderateWoke.length > 0;
+
+                          if (!hasWokeElements) {
+                            return (
+                              <div className="flex items-center gap-1">
+                                <FaCheckCircle className="text-green-500 text-xs" />
+                                <span className="text-xs text-green-600 dark:text-green-400">Clean</span>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="space-y-1">
+                              {stronglyWoke.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                  <span className="text-xs text-red-600 dark:text-red-400 font-medium">
+                                    {stronglyWoke.length} Strong
+                                  </span>
+                                </div>
+                              )}
+                              {moderateWoke.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                  <span className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
+                                    {moderateWoke.length} Moderate
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-2">
+                        {/* View Details Button */}
+                        <button
+                          onClick={() => navigate(`/view/${item.assessments[0]?.id}`)}
+                          className="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                          title="View Details"
+                        >
+                          <FaEye className="w-4 h-4" />
+                        </button>
+                        
+                        {/* User-specific actions */}
+                        {userId ? (
+                          item.userAssessment ? (
+                            <>
+                              <button
+                                onClick={() => navigate(`/edit/${item.userAssessment.id}`)}
+                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                title="Edit Assessment"
+                              >
+                                <FaEdit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAssessment(item.userAssessment.id, item.showName)}
+                                disabled={deleteLoading === item.userAssessment.id}
+                                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 disabled:text-red-400"
+                                title="Delete Assessment"
+                              >
+                                <FaTrash className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => navigate('/new', { 
+                                state: { 
+                                  showName: item.showName,
+                                  showDetails: item.assessments[0]?.show_details || null
+                                } 
+                              })}
+                              className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                              title="Assess This Show"
+                            >
+                              <FaPlus className="w-4 h-4" />
+                            </button>
+                          )
+                        ) : (
+                          <button
+                            onClick={() => navigate('/login', { state: { redirectTo: '/search' } })}
+                            className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                            title="Login to Assess"
+                          >
+                            <FaPlus className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          filteredAssessments.map((item) => (
+        </div>
+      ) : (
+        /* Card View */
+        <div className="space-y-6">
+          {filteredAssessments.map((item) => (
             <div key={item.showName} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow">
               <div className="flex flex-col gap-4 sm:gap-6">
                 {/* First Row: Poster and Details */}
@@ -470,29 +684,72 @@ const SearchAssessments = () => {
                 {/* Second Row: Woke Elements */}
                 <div>
                   <h4 className="font-semibold text-gray-800 dark:text-white mb-3">Woke Elements:</h4>
-                  {item.assessments[0]?.questions && 
-                   item.assessments[0].questions.filter(q => q.answer === "Yes").length > 0 ? (
-                    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 overflow-hidden">
-                      {item.assessments[0].questions
-                        .filter(q => q.answer === "Yes")
-                        .map((question) => {
-                          const fullQuestion = QUESTIONS.find(fq => fq.id === question.id);
-                          return fullQuestion ? (
-                            <QuestionIconCard
-                              key={question.id}
-                              question={{...fullQuestion, answer: question.answer}}
-                              size="small"
-                              interactive={false}
-                            />
-                          ) : null;
-                        })}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                      <FaCheckCircle className="text-xl text-green-500" />
-                      <span className="text-green-700 dark:text-green-400 font-medium">No woke elements detected!</span>
-                    </div>
-                  )}
+                  {(() => {
+                    const stronglyWoke = item.assessments[0]?.questions?.filter(q => q.answer === "Strongly Agree" || q.answer === "Yes") || [];
+                    const moderateWoke = item.assessments[0]?.questions?.filter(q => q.answer === "Agree") || [];
+                    const hasWokeElements = stronglyWoke.length > 0 || moderateWoke.length > 0;
+
+                    if (!hasWokeElements) {
+                      return (
+                        <div className="flex items-center justify-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <FaCheckCircle className="text-xl text-green-500" />
+                          <span className="text-green-700 dark:text-green-400 font-medium">No woke elements detected!</span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-3">
+                        {/* Strongly Woke Elements */}
+                        {stronglyWoke.length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="font-medium text-red-700 dark:text-red-400 text-sm">
+                              Strongly Woke ({stronglyWoke.length})
+                            </h5>
+                            <div className="flex flex-wrap gap-2">
+                              {stronglyWoke.slice(0, 3).map((question) => {
+                                const fullQuestion = QUESTIONS.find(fq => fq.id === question.id);
+                                return fullQuestion ? (
+                                  <div key={question.id} className="px-2 py-1 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
+                                    <span className="text-xs font-medium text-red-800 dark:text-red-200">{fullQuestion.text}</span>
+                                  </div>
+                                ) : null;
+                              })}
+                              {stronglyWoke.length > 3 && (
+                                <div className="px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded border border-red-200 dark:border-red-800">
+                                  <span className="text-xs text-red-600 dark:text-red-400">+{stronglyWoke.length - 3} more</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Moderate Woke Elements */}
+                        {moderateWoke.length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="font-medium text-yellow-700 dark:text-yellow-400 text-sm">
+                              Moderate Woke ({moderateWoke.length})
+                            </h5>
+                            <div className="flex flex-wrap gap-2">
+                              {moderateWoke.slice(0, 3).map((question) => {
+                                const fullQuestion = QUESTIONS.find(fq => fq.id === question.id);
+                                return fullQuestion ? (
+                                  <div key={question.id} className="px-2 py-1 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+                                    <span className="text-xs font-medium text-yellow-800 dark:text-yellow-200">{fullQuestion.text}</span>
+                                  </div>
+                                ) : null;
+                              })}
+                              {moderateWoke.length > 3 && (
+                                <div className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 rounded border border-yellow-200 dark:border-yellow-800">
+                                  <span className="text-xs text-yellow-600 dark:text-yellow-400">+{moderateWoke.length - 3} more</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Action Buttons */}
@@ -559,9 +816,9 @@ const SearchAssessments = () => {
                 </div>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmModal && (
