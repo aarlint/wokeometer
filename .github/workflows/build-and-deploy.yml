@@ -35,22 +35,18 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: wokeometer/package-lock.json
+          cache-dependency-path: package-lock.json
           
       - name: Install dependencies
-        run: |
-          cd wokeometer
-          npm ci
+        run: npm ci
           
       - name: Build React app
-        run: |
-          cd wokeometer
-          npm run build
+        run: npm run build
           
       - name: Prepare deployment files
         run: |
           # Copy build files to root for GitHub Pages deployment
-          cp -r wokeometer/build/* .
+          cp -r build/* .
           # Ensure .nojekyll exists to disable Jekyll processing
           touch .nojekyll
           
