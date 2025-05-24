@@ -6,7 +6,7 @@ export const auth0Config = {
     scope: "openid profile email"
   },
   logoutParams: {
-    returnTo: `${window.location.origin}/login`
+    returnTo: `${window.location.origin}/#/login`
   },
   cacheLocation: "localstorage"
 }; 
