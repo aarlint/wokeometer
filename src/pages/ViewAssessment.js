@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getAssessment, deleteAssessment, useCurrentUserId, useCurrentUser } from '../lib/supabase-db';
-import { getWokenessCategory, QUESTIONS } from '../data';
-import { FaEye, FaEyeSlash, FaInfoCircle, FaArrowLeft, FaEdit, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
+import { getWokenessCategory, calculateScore, QUESTIONS } from '../data';
+import { FaInfoCircle, FaArrowLeft, FaEdit, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
 
 const ViewAssessment = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const [assessment, setAssessment] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,9 +15,7 @@ const ViewAssessment = () => {
   const userId = useCurrentUserId();
   const userInfo = useCurrentUser();
 
-  // Check for developer flag in URL
-  const urlParams = new URLSearchParams(location.search);
-  const isDevMode = urlParams.get('devflag') === 'true';
+
 
   const loadAssessment = useCallback(async () => {
     try {
@@ -40,10 +37,14 @@ const ViewAssessment = () => {
           answer: savedQ.answer
         };
       });
+
+      // Calculate the score from the merged questions
+      const calculatedScore = calculateScore(mergedQuestions);
       
       setAssessment({
         ...assessmentData,
-        questions: mergedQuestions
+        questions: mergedQuestions,
+        score: calculatedScore
       });
     } catch (err) {
       setError('Failed to load assessment. Please try again.');
@@ -234,32 +235,23 @@ const ViewAssessment = () => {
               </div>
             )}
             
-            {/* Score Display - Hidden for regular users, shown with dev flag */}
-            {isDevMode ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <FaEye className="text-primary" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Developer Mode - Scores Visible</span>
+            {/* Wokeness Score Display - Always Visible */}
+            <div className="space-y-3">
+              <div className="text-center p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-600">
+                <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  Wokeness Assessment
                 </div>
-                <div className="text-4xl font-bold text-gray-900 dark:text-white">{assessment.score}</div>
-                <div className={`text-xl font-semibold ${getCategoryClass(assessment.score)}`}>
+                <div className="text-5xl font-bold text-gray-900 dark:text-white mb-2">
+                  {assessment.score}
+                </div>
+                <div className={`inline-flex items-center px-4 py-2 rounded-full text-xl font-bold ${getCategoryClass(assessment.score)} bg-white dark:bg-gray-900 border-2 border-current`}>
                   {getWokenessCategory(assessment.score)}
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <FaEyeSlash className="text-gray-400" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Assessment scores are hidden</span>
-                </div>
-                <div className="text-2xl font-semibold text-gray-700 dark:text-gray-300">
-                  Assessment Completed
-                </div>
-                <div className="text-gray-600 dark:text-gray-400">
-                  {totalAnswered} questions answered
+                <div className="text-sm text-gray-600 dark:text-gray-400 mt-3">
+                  Based on {totalAnswered} answered questions
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
