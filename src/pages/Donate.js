@@ -25,7 +25,7 @@ const Donate = () => {
             <FaBitcoin className="w-10 h-10 text-orange-500" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Join the Fight
+            Support Our Mission
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
             Support independent media assessment through anonymous Bitcoin donations

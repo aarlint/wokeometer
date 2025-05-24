@@ -148,7 +148,7 @@ const Header = () => {
                       isActive('/donate') ? 'border-b-2 border-primary' : ''
                     }`}
                   >
-                    Join the Fight
+                    Support
                   </Link>
                 </li>
               </ul>
@@ -252,7 +252,7 @@ const Header = () => {
                       isActive('/donate') ? 'border-l-4 border-primary' : ''
                     }`}
                   >
-                    Join the Fight
+                    Support
                   </Link>
                 </li>
               </ul>

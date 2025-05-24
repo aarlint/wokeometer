@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaPlay, FaInfoCircle, FaFistRaised } from 'react-icons/fa';
+import { FaPlay, FaInfoCircle, FaHeart } from 'react-icons/fa';
 
 const Home = () => {
   return (
@@ -50,8 +50,8 @@ const Home = () => {
                 to="/donate"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 duration-200"
               >
-                <FaFistRaised className="w-5 h-5" />
-                Join The Fight
+                <FaHeart className="w-5 h-5" />
+                Support Us
               </Link>
             </div>
           </div>
@@ -95,9 +95,9 @@ const Home = () => {
           
           <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
             <div className="w-16 h-16 bg-accent bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaFistRaised className="w-8 h-8 text-accent" />
+              <FaHeart className="w-8 h-8 text-accent" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Support Our Cause</h3>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Support Our Mission</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Help us maintain an independent platform through anonymous Bitcoin donations.
             </p>
@@ -105,7 +105,7 @@ const Home = () => {
               to="/donate"
               className="text-accent hover:text-accent-hover font-semibold"
             >
-              Donate Now →
+              Support Now →
             </Link>
           </div>
         </div>
