@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getAssessment, deleteAssessment, useCurrentUserId, useCurrentUser } from '../lib/supabase-db';
 import { getWokenessCategory, QUESTIONS } from '../data';
-import { FaEye, FaEyeSlash, FaInfoCircle, FaArrowLeft, FaEdit, FaTrash, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaInfoCircle, FaArrowLeft, FaEdit, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
 
 const ViewAssessment = () => {
   const { id } = useParams();
