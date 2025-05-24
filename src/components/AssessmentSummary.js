@@ -22,20 +22,20 @@ const AssessmentSummary = ({ show, onClose }) => {
     // Calculate averages
     show.assessments.forEach(assessment => {
       assessment.questions.forEach(q => {
-        // Convert answer to points based on data.js scoring system
-        let answerValue = 0;
-        switch (q.answer) {
-          case "Agree":
-            answerValue = 5;
-            break;
-          case "Strongly Agree":
-            answerValue = 10;
-            break;
-          case "Disagree":
-          case "N/A":
-          default:
-            answerValue = 0;
+        // Convert answer to points based on data.js scoring system using proper weights and multipliers
+        let multiplier = 0;
+        
+        // Handle both old and new answer formats for backward compatibility
+        if (q.answer === "Yes" || q.answer === "Strongly Agree") {
+          multiplier = 1.0; // Full weight
+        } else if (q.answer === "Agree") {
+          multiplier = 0.7; // 70% of weight
+        } else if (q.answer === "Disagree" || q.answer === "No") {
+          multiplier = 0; // No points
         }
+        // N/A and empty answers get 0 points
+        
+        const answerValue = 10 * (q.weight || 1.0) * multiplier;
         questionAverages[q.text] += answerValue;
         questionCounts[q.text]++;
       });

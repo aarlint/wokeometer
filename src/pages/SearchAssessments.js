@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { loadAssessmentsForShow, deleteAssessment, useCurrentUserId, useCurrentUser } from '../lib/supabase-db';
-import { QUESTIONS } from '../data';
+import { QUESTIONS, calculateScore, getWokenessCategory } from '../data';
 import { 
   FaSearch,
   FaSortUp, 
@@ -73,18 +73,9 @@ const SearchAssessments = () => {
             };
           });
           
-          // Calculate scores for each assessment
+          // Calculate scores for each assessment using the proper calculateScore function
           const scores = mergedAssessments.map(assessment => {
-            let totalScore = 0;
-            
-            // Add points for each Yes answer based on weight
-            assessment.questions.forEach(q => {
-              if (q.answer === "Yes") {
-                totalScore += 10 * q.weight;
-              }
-            });
-            
-            return Math.round(totalScore);
+            return calculateScore(assessment.questions);
           });
           
           // Calculate average score across all assessments
@@ -148,12 +139,19 @@ const SearchAssessments = () => {
   }, [loadCatalog]);
   
   const getWokenessLevel = (score) => {
-    if (score === 0) return { level: 'Based Content', color: 'text-blue-600', bgColor: 'bg-blue-100' };
-    if (score > 0 && score <= 20) return { level: 'Limited Wokeness', color: 'text-green-600', bgColor: 'bg-green-100' };
-    if (score > 20 && score <= 40) return { level: 'Woke', color: 'text-yellow-600', bgColor: 'bg-yellow-100' };
-    if (score > 40 && score <= 60) return { level: 'Very Woke', color: 'text-orange-600', bgColor: 'bg-orange-100' };
-    if (score > 60) return { level: 'Egregiously Woke', color: 'text-red-600', bgColor: 'bg-red-100' };
-    return { level: 'Unrated', color: 'text-gray-600', bgColor: 'bg-gray-100' };
+    // Use the standard getWokenessCategory function from data.js for consistency
+    const category = getWokenessCategory(score);
+    
+    // Map categories to display styles
+    const categoryMap = {
+      'Based': { level: 'Based Content', color: 'text-blue-600', bgColor: 'bg-blue-100' },
+      'Limited Wokeness': { level: 'Limited Wokeness', color: 'text-green-600', bgColor: 'bg-green-100' },
+      'Woke': { level: 'Woke', color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
+      'Very Woke': { level: 'Very Woke', color: 'text-orange-600', bgColor: 'bg-orange-100' },
+      'Egregiously Woke': { level: 'Egregiously Woke', color: 'text-red-600', bgColor: 'bg-red-100' }
+    };
+    
+    return categoryMap[category] || { level: 'Unrated', color: 'text-gray-600', bgColor: 'bg-gray-100' };
   };
   
   const filteredAssessments = assessments
