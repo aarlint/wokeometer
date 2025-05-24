@@ -23,9 +23,9 @@ module.exports = {
           muted: '#718096',
         },
         dark: {
-          bg: '#121212',
-          card: '#1e1e1e',
-          border: '#333333',
+          bg: '#0a0a0a',
+          card: '#1a1a1a',
+          border: '#2a2a2a',
           text: '#f5f5f5',
           muted: '#a0a0a0',
         },
@@ -35,8 +35,12 @@ module.exports = {
           highlight: 'rgba(255, 255, 255, 0.05)',
         },
         primary: {
-          DEFAULT: '#7c3aed',
-          hover: '#6d28d9',
+          DEFAULT: '#22c55e',
+          hover: '#16a34a',
+        },
+        accent: {
+          DEFAULT: '#84cc16',
+          hover: '#65a30d',
         },
         category: {
           limited: '#10b981',
